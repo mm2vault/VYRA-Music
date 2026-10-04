@@ -375,3 +375,11 @@ main{padding:0 34px 150px;max-width:1500px;margin:auto}header{height:82px;positi
 .track-round{width:42px!important;height:42px!important}
 .track-screen-note{font-size:10px!important}
 }
+
+/* VYRA Offline Library */
+.offline-library-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 14px}
+.offline-library-head>div{display:flex;flex-direction:column;gap:4px}.offline-library-head b{font-size:16px}.offline-library-head small{font-size:10px;color:#847b8b}
+.offline-result{background:rgba(255,255,255,.025)!important;margin-bottom:4px!important;border:1px solid rgba(255,255,255,.045)!important}
+.offline-file-icon{width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(236,72,153,.12));color:#e9d5ff;font-size:19px;flex:none}
+.offline-delete{font-size:20px!important}.offline-empty{padding:55px 20px}.offline-empty p{max-width:420px;margin:8px auto 18px}
+@media(max-width:550px){.offline-library-head .primary{padding:9px 11px;font-size:10px}.offline-file-icon{width:46px;height:46px}.offline-result .meta b{font-size:11px}.offline-result .meta small{font-size:9px}}
