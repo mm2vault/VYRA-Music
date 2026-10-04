@@ -7,16 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#9b5cff">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 </head>
 <body>
-<div id="splash" class="splash"><div class="splash-logo">V</div><b>VYRA</b><span>MUSIC UNIVERSE</span></div><div class="app">
+<div id="splash" class="splash"><div class="splash-logo"><img src="icon.svg" alt="VYRA"></div><b>VYRA</b><span>MUSIC UNIVERSE</span></div><div class="app">
   <aside class="sidebar">
-    <div class="brand"><span class="logo">V</span><span>VYRA</span></div>
+    <div class="brand"><span class="logo"><img src="icon.svg" alt=""></span><span>VYRA</span></div>
     <nav>
-      <button class="nav active" data-page="home">⌂ <span>Ana Sayfa</span></button>
-      <button class="nav" data-page="discover">✦ <span>Keşfet</span></button>
-      <button class="nav" data-page="search">⌕ <span>Ara</span></button>
-      <button class="nav" data-page="library">♫ <span>Kitaplığım</span></button>
+      <button class="nav active" data-page="home"><i data-lucide="house"></i><span>Ana Sayfa</span></button>
+      <button class="nav" data-page="discover"><i data-lucide="compass"></i><span>Keşfet</span></button>
+      <button class="nav" data-page="search"><i data-lucide="search"></i><span>Ara</span></button>
+      <button class="nav" data-page="library"><i data-lucide="library"></i><span>Kitaplığım</span></button>
     </nav>
     <div class="side-title">SENİN ALANIN</div>
     <button class="playlist-btn" id="newPlaylist">＋ Yeni çalma listesi</button>
@@ -26,9 +29,9 @@
 
   <main>
     <header>
-      <button class="mobile-menu" id="mobileMenu">☰</button>
+      <button class="mobile-menu" id="mobileMenu"><i data-lucide="menu"></i></button>
       <div class="search"><span>⌕</span><input id="searchInput" placeholder="Şarkı, sanatçı veya albüm ara..."><kbd>⌘ K</kbd></div>
-      <button class="profile" id="profileBtn">M</button>
+      <button class="profile" id="profileBtn">M</button><button id="installBtn" class="install-btn" hidden><i data-lucide="download"></i><span>Uygulamayı yükle</span></button>
     </header>
 
     <section id="home" class="page active-page">
@@ -75,7 +78,7 @@
     <div class="volume"><span>🔊</span><input id="volume" type="range" min="0" max="100" value="70"></div>
   </div>
 
-  <div class="mobile-nav"><button data-page="home">⌂<small>Ana</small></button><button data-page="discover">✦<small>Keşfet</small></button><button data-page="search">⌕<small>Ara</small></button><button data-page="library">♫<small>Kitaplık</small></button></div>
+  <div class="mobile-nav"><button data-page="home"><i data-lucide="house"></i><small>Ana</small></button><button data-page="discover"><i data-lucide="compass"></i><small>Keşfet</small></button><button data-page="search"><i data-lucide="search"></i><small>Ara</small></button><button data-page="library"><i data-lucide="library"></i><small>Kitaplık</small></button></div>
 </div>
 
 
@@ -150,6 +153,7 @@
   window.addEventListener("load",()=>setTimeout(hideSplash,120));
 })();
 </script>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <script src="app.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
