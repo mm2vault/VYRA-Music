@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VYRA — Your Music Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">V</span><span>VYRA</span></div>
+    <nav>
+      <button class="nav active" data-page="home">⌂ <span>Ana Sayfa</span></button>
+      <button class="nav" data-page="discover">✦ <span>Keşfet</span></button>
+      <button class="nav" data-page="search">⌕ <span>Ara</span></button>
+      <button class="nav" data-page="library">♫ <span>Kitaplığım</span></button>
+    </nav>
+    <div class="side-title">SENİN ALANIN</div>
+    <button class="playlist-btn" id="newPlaylist">＋ Yeni çalma listesi</button>
+    <div id="playlistList" class="playlist-list"></div>
+    <div class="sidebar-bottom">
+      <div class="mini-user"><div class="avatar">M</div><div><b>Misafir</b><small>VYRA hesabı</small></div></div>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <button class="mobile-menu" id="mobileMenu">☰</button>
+      <div class="search"><span>⌕</span><input id="searchInput" placeholder="Şarkı, sanatçı veya albüm ara..."><kbd>⌘ K</kbd></div>
+      <button class="profile">M</button>
+    </header>
+
+    <section id="home" class="page active-page">
+      <div class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-copy"><span class="eyebrow">VYRA MUSIC</span><h1>Müziğin<br><em>senin dünyan.</em></h1><p>YouTube'daki müzikleri keşfet, kendi koleksiyonunu oluştur ve ritmini kendin seç.</p><button class="primary" id="startBtn">▶ Dinlemeye başla</button></div>
+        <div class="hero-art"><div class="disc"><div class="disc-center">V</div></div><div class="orbit o1"></div><div class="orbit o2"></div></div>
+      </div>
+      <div class="section-head"><div><h2>Bugün senin için</h2><p>Ruh haline göre seçtiklerimiz</p></div><button class="ghost" data-page-target="discover">Tümünü gör →</button></div>
+      <div class="cards" id="featured"></div>
+      <div class="section-head"><div><h2>Hızlı seçim</h2><p>Tek dokunuşla başla</p></div></div>
+      <div class="chips">
+        <button data-query="lofi">☁ Lofi</button><button data-query="phonk">⚡ Phonk</button><button data-query="Türkçe pop">♫ Türkçe Pop</button><button data-query="rock classics">🎸 Rock</button><button data-query="jazz">◉ Jazz</button>
+      </div>
+    </section>
+
+    <section id="discover" class="page">
+      <div class="page-title"><span class="eyebrow">KEŞFET</span><h1>Yeni sesler.</h1><p>Aradığın müziği YouTube üzerinden bul ve VYRA içinde dinle.</p></div>
+      <div class="discover-grid" id="discoverGrid"></div>
+    </section>
+
+    <section id="search" class="page">
+      <div class="page-title"><span class="eyebrow">ARAMA</span><h1>Müziğini bul.</h1><div class="big-search"><span>⌕</span><input id="bigSearch" placeholder="Ne dinlemek istiyorsun?"><button id="bigSearchBtn">Ara</button></div></div>
+      <div id="results" class="results"></div>
+    </section>
+
+    <section id="library" class="page">
+      <div class="page-title"><span class="eyebrow">KİTAPLIĞIM</span><h1>Senin koleksiyonun.</h1><p>Favorilerin ve oluşturduğun listeler burada.</p></div>
+      <div class="library-tabs"><button class="selected">Favoriler</button><button>Çalma listeleri</button><button>Son dinlenenler</button></div>
+      <div id="libraryContent" class="results"></div>
+    </section>
+  </main>
+
+  <div class="player">
+    <div class="now"><div id="nowArt" class="now-art">V</div><div><b id="nowTitle">VYRA'ya hoş geldin</b><small id="nowArtist">Bir şarkı seç</small></div><button id="likeBtn" class="icon">♡</button></div>
+    <div class="controls"><div class="buttons"><button>↶</button><button id="playBtn" class="play">▶</button><button>↷</button></div><div class="progress"><span>0:00</span><input id="progress" type="range" min="0" max="100" value="0"><span>0:00</span></div></div>
+    <div class="volume"><span>🔊</span><input type="range" min="0" max="100" value="70"></div>
+  </div>
+
+  <div class="mobile-nav"><button data-page="home">⌂<small>Ana</small></button><button data-page="discover">✦<small>Keşfet</small></button><button data-page="search">⌕<small>Ara</small></button><button data-page="library">♫<small>Kitaplık</small></button></div>
+</div>
+<div id="toast"></div>
+<script src="app.js"></script>
+</body></html>
