@@ -27,10 +27,13 @@ jobs:
 
       - name: Run QA
         id: qa
+        continue-on-error: true
         run: node maintenance/vyra-qa.mjs
 
       - name: Auto-fix known escape corruption
-        if: failure()
+        id: autofix
+        if: steps.qa.outcome == 'failure'
+        continue-on-error: true
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -42,8 +45,14 @@ jobs:
           PY
           node maintenance/vyra-qa.mjs
 
+      - name: Re-run QA after auto-fix
+        id: recheck
+        if: steps.qa.outcome == 'failure'
+        continue-on-error: true
+        run: node maintenance/vyra-qa.mjs
+
       - name: Commit safe auto-fixes
-        if: success() && steps.qa.outcome == 'failure'
+        if: steps.qa.outcome == 'failure' && steps.autofix.outcome == 'success' && steps.recheck.outcome == 'success'
         run: |
           if git diff --quiet; then
             echo "No safe auto-fix was needed."
@@ -55,11 +64,15 @@ jobs:
           git commit -m "fix: auto-repair known app syntax corruption"
           git push
 
+      - name: Fail if the problem remains
+        if: steps.recheck.outcome == 'failure' || (steps.qa.outcome == 'failure' && steps.autofix.outcome == 'failure')
+        run: exit 1
+
       - name: Open issue on unexpected failures
         if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh issue list --state open --search "VYRA hourly QA" --limit 1 | grep -q "VYRA hourly QA"; then
-            gh issue create               --title "VYRA hourly QA failure"               --body "The hourly VYRA QA workflow detected a failure that could not be repaired automatically. Check the Actions run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            gh issue create               --title "VYRA hourly QA failure"               --body "The hourly VYRA QA workflow detected a failure that could not be repaired automatically. Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           fi
