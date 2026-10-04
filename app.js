@@ -783,8 +783,48 @@ function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" 
 async function saveOfflineTrack(track){const t=normalizeTrack(track);if(!t)return;try{const db=await openOfflineDB();await new Promise((resolve,reject)=>{const tx=db.transaction(OFFLINE_STORE,"readwrite");tx.objectStore(OFFLINE_STORE).put({...t,savedAt:Date.now(),offlineAudio:false});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});toast("✓ Koleksiyona kaydedildi • YouTube sesi indirilemiyor");}catch(error){console.warn("VYRA offline storage:",error);toast("Çevrimdışı kayıt kullanılamıyor.");}}
 async function isOfflineSaved(id){try{const db=await openOfflineDB();return await new Promise(resolve=>{const tx=db.transaction(OFFLINE_STORE,"readonly");const req=tx.objectStore(OFFLINE_STORE).get(id);req.onsuccess=()=>resolve(Boolean(req.result));req.onerror=()=>resolve(false);});}catch{return false;}}
 function updateOfflineButton(track){if(!track)return;isOfflineSaved(track.id).then(saved=>["#downloadBtn","#trackScreenDownload"].forEach(selector=>{const button=$(selector);if(button){button.textContent=saved?"✓":"⇩";button.title=saved?"Çevrimdışı koleksiyonda":"Çevrimdışı kaydet";button.classList.toggle("saved",saved);}}));}
-function updateOfflineStatus(){const bar=$("#offlineBar");if(!bar)return;const offline=!navigator.onLine;bar.hidden=!offline;document.body.classList.toggle("is-offline",offline);}
-function setupOfflineMode(){updateOfflineStatus();window.addEventListener("online",updateOfflineStatus);window.addEventListener("offline",updateOfflineStatus);updateOfflineButton(current);}
+let vyraOnlineCheck=null;
+async function verifyConnection(){
+  if(!navigator.onLine){ updateOfflineStatus(true); return false; }
+  if(vyraOnlineCheck) return vyraOnlineCheck;
+  vyraOnlineCheck=(async()=>{
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),4500);
+    try{
+      const response=await fetch("./?connectivity="+Date.now(),{
+        method:"GET",
+        cache:"no-store",
+        signal:controller.signal,
+        headers:{"Cache-Control":"no-cache"}
+      });
+      const online=response.ok;
+      updateOfflineStatus(!online);
+      return online;
+    }catch{
+      updateOfflineStatus(true);
+      return false;
+    }finally{
+      clearTimeout(timer);
+      vyraOnlineCheck=null;
+    }
+  })();
+  return vyraOnlineCheck;
+}
+function updateOfflineStatus(forceOffline=null){
+  const bar=$("#offlineBar");
+  if(!bar)return;
+  const offline=forceOffline===null ? !navigator.onLine : Boolean(forceOffline);
+  bar.hidden=!offline;
+  document.body.classList.toggle("is-offline",offline);
+}
+function setupOfflineMode(){
+  updateOfflineStatus(false);
+  verifyConnection();
+  window.addEventListener("online",()=>verifyConnection());
+  window.addEventListener("offline",()=>updateOfflineStatus(true));
+  updateOfflineButton(current);
+}
+function markOnline(){ updateOfflineStatus(false); }
 \nfunction playTrack(track, index = -1) {
   const t = normalizeTrack(track);
   if (!t) return;
@@ -923,12 +963,14 @@ function loadFeatured() {
   const seed = history[0]?.title || favs[0]?.title || "popular music";
   searchSongs(seed, 20)
     .then(tracks => {
+      markOnline();
       queue = tracks;
       queueIndex = -1;
       renderHomeSections(tracks);
       discover.innerHTML = tracks.map(renderCard).join("");
     })
     .catch(error => {
+      if (error?.name === "TypeError" || !navigator.onLine) updateOfflineStatus(true);
       console.error("VYRA home error:", error);
       const message =
         '<div class="api-warning"><b>Müzikler yüklenemedi.</b><p>' +
@@ -983,6 +1025,18 @@ function bindEvents() {
 
   $("#likeBtn")?.addEventListener("click", () => {
     if (current) toggleFavorite(current);
+  });
+
+  const downloadCurrent = () => {
+    if (!current) {
+      toast("Önce bir şarkı seç.");
+      return;
+    }
+    saveOfflineTrack(current);
+  };
+  $("#downloadBtn")?.addEventListener("click", downloadCurrent);
+  $("#trackScreenDownload")?.addEventListener("click", () => {
+    if (screenTrack) saveOfflineTrack(screenTrack);
   });
 
   $("#progress")?.addEventListener("input", event => {
@@ -1239,6 +1293,7 @@ function setupPWA() {
 
 function boot() {
   setupPWA();
+  setupOfflineMode();
   if (window.lucide) window.lucide.createIcons();
   loadState();
   bindEvents();
