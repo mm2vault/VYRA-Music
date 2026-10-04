@@ -297,3 +297,81 @@ main{padding:0 34px 150px;max-width:1500px;margin:auto}header{height:82px;positi
 @media(max-width:900px){.player{grid-template-columns:1fr auto!important;gap:8px!important}.player .now{min-width:0}.player .controls{grid-template-rows:30px 18px;min-width:165px}.player .volume{display:none}.track-screen-inner{grid-template-columns:1fr!important;gap:24px!important;padding:78px 0 110px!important}.track-screen-art-wrap{width:min(76vw,340px)}.track-screen-info{text-align:center}.track-screen-actions,.track-screen-controls{justify-content:center}.track-screen-progress{margin-top:25px!important}.track-screen-note{text-align:left}.offline-bar{bottom:145px}}
 @media(max-width:550px){.player{height:82px!important;padding:6px 10px!important}.player .now{gap:7px}.player .now-copy b{font-size:10px}.player .now-copy small{font-size:8px}.player #downloadBtn,.player #likeBtn{width:28px;height:28px;font-size:13px}.player .controls{grid-template-rows:28px 17px;min-width:142px}.player .buttons{gap:4px}.player .buttons button{width:27px!important;height:27px!important;min-width:27px!important}.player .buttons .play{width:34px!important;height:34px!important}.player .progress{font-size:7px}.player .progress input{min-width:52px}.track-screen-info h1{font-size:31px!important}.track-screen-art-wrap{width:min(82vw,320px)}.track-screen-meta{justify-content:center}.track-screen-progress{grid-template-columns:30px 1fr 30px}.offline-bar{bottom:142px;max-width:90vw}}
 @media(max-width:380px){.player{height:84px!important}.player .now-copy{max-width:84px}.player .controls{min-width:128px}.player .progress input{min-width:45px}.track-screen-art-wrap{width:78vw}}
+
+/* VYRA 2.1 — player and track screen final visual pass */
+.player{left:245px!important;right:0!important;height:92px!important;padding:10px 22px!important;display:grid!important;grid-template-columns:minmax(260px,1fr) minmax(330px,1.2fr) minmax(150px,.7fr)!important;gap:28px!important;align-items:center!important}
+.player .now{min-width:0!important;display:grid!important;grid-template-columns:52px minmax(0,1fr) auto auto!important;align-items:center!important;gap:10px!important}
+.player .now-art{grid-column:1;width:52px!important;height:52px!important;flex:none!important}
+.player .now-copy{grid-column:2;min-width:0!important;overflow:hidden!important}
+.player .now-copy b,.player .now-copy small{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.player .equalizer{grid-column:3;display:flex!important}
+.player #downloadBtn{grid-column:4}
+.player #likeBtn{grid-column:5}
+.player .controls{min-width:0!important;width:100%!important;display:grid!important;grid-template-rows:34px 20px!important;align-items:center!important}
+.player .buttons{height:34px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:17px!important}
+.player .buttons button{width:30px!important;height:30px!important;min-width:30px!important;border-radius:50%!important;background:transparent!important}
+.player .buttons .play{width:36px!important;height:36px!important;min-width:36px!important;background:#fff!important;color:#111!important}
+.player .progress{display:grid!important;grid-template-columns:32px minmax(0,1fr) 32px!important;align-items:center!important;gap:8px!important;width:100%!important}
+.player .progress input{width:100%!important;min-width:0!important;height:4px!important}
+.player .volume{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;max-width:none!important}
+.player .volume input{width:min(120px,100%)!important;height:4px!important}
+.player #downloadBtn,.player #likeBtn{width:32px!important;height:32px!important;padding:0!important;display:grid!important;place-items:center!important}
+
+.track-screen{position:fixed!important;inset:0!important;z-index:240!important;background:#09070d!important;overflow:auto!important}
+.track-backdrop{position:absolute!important;inset:-12%!important;background-position:center!important;background-size:cover!important;filter:blur(55px)!important;transform:scale(1.08)!important;opacity:.42!important}
+.track-screen:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 25% 35%,rgba(168,85,247,.15),transparent 35%),linear-gradient(90deg,rgba(7,5,10,.76),rgba(7,5,10,.92))!important;z-index:1}
+.track-screen:after{content:"";position:absolute;inset:0!important;background:linear-gradient(180deg,transparent 45%,#09070d 100%)!important;z-index:1;pointer-events:none}
+.track-screen-inner{position:relative!important;z-index:2!important;width:min(1120px,90vw)!important;min-height:100%!important;margin:auto!important;display:grid!important;grid-template-columns:minmax(300px,440px) minmax(0,1fr)!important;align-items:center!important;gap:70px!important;padding:80px 0 110px!important}
+.track-screen-art-wrap{width:min(440px,40vw)!important;aspect-ratio:1!important;justify-self:center!important;filter:drop-shadow(0 35px 60px rgba(0,0,0,.55))}
+.track-screen-art{position:absolute!important;inset:0!important;background-size:cover!important;background-position:center!important;border-radius:22px!important}
+.track-screen-shine{z-index:2!important}
+.track-screen-info{max-width:650px!important}
+.track-screen-info h1{font-size:clamp(36px,5vw,68px)!important;line-height:.98!important;max-height:2.95em!important;overflow:hidden!important;display:-webkit-box!important;-webkit-line-clamp:3!important;-webkit-box-orient:vertical!important}
+.track-screen-info>p{font-size:17px!important;color:#b7aebb!important}
+.track-screen-meta{margin:18px 0 24px!important}
+.track-screen-actions{gap:9px!important}
+.track-main-play{width:62px!important;height:62px!important}
+.track-screen-progress{margin-top:32px!important}
+.track-screen-controls{margin-top:17px!important;gap:8px!important}
+.track-screen-controls button{background:rgba(255,255,255,.055)!important;backdrop-filter:blur(12px)}
+.track-screen-note{display:flex!important;align-items:center!important;gap:10px!important;max-width:410px!important;margin-top:28px!important;background:rgba(255,255,255,.035)!important;backdrop-filter:blur(14px)!important}
+.track-screen-close{position:fixed!important;top:24px!important;right:28px!important;z-index:5!important;width:42px!important;height:42px!important;border-radius:50%!important;background:rgba(12,9,17,.62)!important;border:1px solid rgba(255,255,255,.1)!important;font-size:25px!important}
+
+@media(max-width:900px){
+.player{left:0!important;bottom:58px!important;height:78px!important;padding:7px 11px!important;grid-template-columns:minmax(0,1fr) auto!important;gap:9px!important}
+.player .now{grid-template-columns:44px minmax(0,1fr) auto!important;gap:8px!important}
+.player .now-art{width:44px!important;height:44px!important}
+.player .equalizer{display:none!important}
+.player #downloadBtn{grid-column:3}
+.player #likeBtn{display:none!important}
+.player .controls{grid-column:2;grid-row:1;min-width:145px!important;width:145px!important}
+.player .volume{display:none!important}
+.player .buttons{gap:3px!important}
+.player .buttons button{width:28px!important;height:28px!important;min-width:28px!important}
+.player .buttons .play{width:34px!important;height:34px!important;min-width:34px!important}
+.player .progress{grid-template-columns:25px minmax(0,1fr) 25px!important;gap:4px!important;font-size:7px!important}
+.track-screen-inner{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:22px!important;width:min(100%,520px)!important;padding:72px 22px 115px!important;text-align:center!important}
+.track-screen-art-wrap{width:min(76vw,330px)!important;flex:none!important}
+.track-screen-info{width:100%!important}
+.track-screen-info h1{font-size:clamp(30px,9vw,44px)!important;max-height:2.05em!important;-webkit-line-clamp:2!important}
+.track-screen-info>p{font-size:14px!important}
+.track-screen-meta{justify-content:center!important;margin:12px 0 20px!important}
+.track-screen-actions{justify-content:center!important}
+.track-screen-progress{margin-top:25px!important}
+.track-screen-controls{justify-content:center!important}
+.track-screen-note{margin:20px auto 0!important;text-align:left!important}
+.track-screen-close{top:15px!important;right:15px!important}
+}
+@media(max-width:550px){
+.player{bottom:58px!important;height:76px!important}
+.player .now-copy b{font-size:10px!important}.player .now-copy small{font-size:8px!important}
+.player .controls{width:132px!important;min-width:132px!important}
+.player #downloadBtn{width:28px!important;height:28px!important;font-size:12px!important}
+.player .now{grid-template-columns:42px minmax(0,1fr) auto!important}
+.player .now-art{width:42px!important;height:42px!important}
+.track-screen-inner{gap:17px!important;padding-top:68px!important}
+.track-screen-art-wrap{width:min(78vw,300px)!important}
+.track-main-play{width:56px!important;height:56px!important}
+.track-round{width:42px!important;height:42px!important}
+.track-screen-note{font-size:10px!important}
+}
