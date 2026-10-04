@@ -785,42 +785,26 @@ async function isOfflineSaved(id){try{const db=await openOfflineDB();return awai
 function updateOfflineButton(track){if(!track)return;isOfflineSaved(track.id).then(saved=>["#downloadBtn","#trackScreenDownload"].forEach(selector=>{const button=$(selector);if(button){button.textContent=saved?"✓":"⇩";button.title=saved?"Çevrimdışı koleksiyonda":"Çevrimdışı kaydet";button.classList.toggle("saved",saved);}}));}
 let vyraOnlineCheck=null;
 async function verifyConnection(){
-  if(!navigator.onLine){ updateOfflineStatus(true); return false; }
   if(vyraOnlineCheck) return vyraOnlineCheck;
+  if(navigator.onLine===false){ updateOfflineStatus(true); return false; }
+  // navigator.onLine is only a hint. Do not mark VYRA offline because
+  // a GitHub Pages connectivity probe or Service Worker cache misses.
   vyraOnlineCheck=(async()=>{
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),4500);
-    try{
-      const response=await fetch("./?connectivity="+Date.now(),{
-        method:"GET",
-        cache:"no-store",
-        signal:controller.signal,
-        headers:{"Cache-Control":"no-cache"}
-      });
-      const online=response.ok;
-      updateOfflineStatus(!online);
-      return online;
-    }catch{
-      updateOfflineStatus(true);
-      return false;
-    }finally{
-      clearTimeout(timer);
-      vyraOnlineCheck=null;
-    }
+    updateOfflineStatus(false);
+    return true;
   })();
   return vyraOnlineCheck;
 }
 function updateOfflineStatus(forceOffline=null){
   const bar=$("#offlineBar");
   if(!bar)return;
-  const offline=forceOffline===null ? !navigator.onLine : Boolean(forceOffline);
+  const offline=forceOffline===null ? navigator.onLine===false : Boolean(forceOffline);
   bar.hidden=!offline;
   document.body.classList.toggle("is-offline",offline);
 }
 function setupOfflineMode(){
-  updateOfflineStatus(false);
-  verifyConnection();
-  window.addEventListener("online",()=>verifyConnection());
+  updateOfflineStatus(navigator.onLine===false);
+  window.addEventListener("online",()=>updateOfflineStatus(false));
   window.addEventListener("offline",()=>updateOfflineStatus(true));
   updateOfflineButton(current);
 }
