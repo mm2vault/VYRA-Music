@@ -875,32 +875,63 @@ function previousTrack() {
   playTrack(queue[queueIndex], queueIndex);
 }
 
+function renderHomeSections(tracks) {
+  const source = normalizeArray(tracks).map(normalizeTrack).filter(Boolean);
+  const fallback = source.slice(0, 8);
+  const personal = history.length ? history.slice(0, 8) : (favs.length ? favs.slice(0, 8) : fallback);
+  const recent = history.length ? history.slice(0, 8) : fallback.slice(0, 4);
+  const trending = source.slice(0, 8);
+  const quick = source.slice(2, 10);
+
+  const sections = [
+    ["#madeForYou", personal],
+    ["#recentlyPlayed", recent],
+    ["#trending", trending],
+    ["#quickPicks", quick]
+  ];
+
+  sections.forEach(([selector, items]) => {
+    const node = $(selector);
+    if (!node) return;
+    node.innerHTML = items.length
+      ? items.map(renderCard).join("")
+      : '<div class="empty-state"><div>♫</div><b>Henüz içerik yok</b><p>Biraz müzik dinlediğinde burada görünecek.</p></div>';
+  });
+}
+
 function loadFeatured() {
-  const featured = $("#featured");
   const discover = $("#discoverGrid");
-  if (!featured || !discover) return;
+  if (!discover) return;
 
   if (!isApiConfigured()) {
-    featured.innerHTML =
-      '<article class="card demo-card"><div class="cover">♫</div><b>VYRA Music</b><small>YouTube araması hazır değil</small></article>';
+    ["#madeForYou", "#recentlyPlayed", "#trending", "#quickPicks"].forEach(selector => {
+      const node = $(selector);
+      if (node) node.innerHTML = '<div class="api-warning"><b>YouTube bağlantısı hazır değil.</b><p>API anahtarını kontrol et.</p></div>';
+    });
     discover.innerHTML =
       '<div class="api-warning"><b>YouTube bağlantısı hazır değil.</b><p>API anahtarını kontrol et.</p></div>';
     return;
   }
 
-  searchSongs("music", 8)
+  const seed = history[0]?.title || favs[0]?.title || "popular music";
+  searchSongs(seed, 20)
     .then(tracks => {
       queue = tracks;
-      featured.innerHTML = tracks.slice(0, 4).map(renderCard).join("");
+      queueIndex = -1;
+      renderHomeSections(tracks);
       discover.innerHTML = tracks.map(renderCard).join("");
     })
     .catch(error => {
-      console.error("VYRA featured error:", error);
-      featured.innerHTML =
+      console.error("VYRA home error:", error);
+      const message =
         '<div class="api-warning"><b>Müzikler yüklenemedi.</b><p>' +
         escapeHtml(error.message) +
         "</p></div>";
-      discover.innerHTML = "";
+      ["#madeForYou", "#recentlyPlayed", "#trending", "#quickPicks"].forEach(selector => {
+        const node = $(selector);
+        if (node) node.innerHTML = message;
+      });
+      discover.innerHTML = message;
     });
 }
 
