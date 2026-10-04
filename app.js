@@ -4,9 +4,10 @@ const $$ = (s) => document.querySelectorAll(s);
 const YOUTUBE_API_KEY = "AIzaSyAPcOxJ9CBs75V-WSXg7v0YnYW-FAuCxe8";
 
 let current=null, screenTrack=null, playing=false, queue=[], queueIndex=-1, player=null, playerReady=false, progressTimer=null;
-let favs=JSON.parse(localStorage.getItem("vyraFavs")||"[]");
-let history=JSON.parse(localStorage.getItem("vyraHistory")||"[]");
-let rawLists=JSON.parse(localStorage.getItem("vyraLists")||"[]");
+function readStore(key,fallback=[]){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch(e){localStorage.removeItem(key);return fallback}}
+let favs=readStore("vyraFavs",[]);
+let history=readStore("vyraHistory",[]);
+let rawLists=readStore("vyraLists",[]);
 let lists=rawLists.map((x,i)=>typeof x==="string"?{id:"pl_"+Date.now()+"_"+i,name:x,tracks:[]}:{id:x.id||"pl_"+Date.now()+"_"+i,name:x.name||"Yeni liste",tracks:Array.isArray(x.tracks)?x.tracks:[]});
 let activePlaylistId=null,pickerTrack=null;
 
@@ -127,7 +128,6 @@ $("#screenProgress").oninput=e=>{const v=Number(e.target.value)||0,max=Number(e.
 $("#profileClose").onclick=()=>$("#profilePanel").classList.remove("open");
 $("#profileLibrary").onclick=()=>{$("#profilePanel").classList.remove("open");page("library")};
 $("#nowArt").onclick=()=>openTrackScreen(current);
-setTimeout(()=>$("#splash")?.classList.add("hide"),1400);
 $$(".nav,.mobile-nav button").forEach(b=>b.onclick=()=>page(b.dataset.page));$$("[data-page-target]").forEach(b=>b.onclick=()=>page(b.dataset.pageTarget));
 $$(".chips button").forEach(b=>b.onclick=()=>{$("#bigSearch").value=b.dataset.query;doSearch(b.dataset.query)});
 $$(".library-tabs button").forEach(b=>b.onclick=()=>{$$(".library-tabs button").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");renderLibrary(b.dataset.libraryTab)});
