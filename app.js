@@ -1199,7 +1199,40 @@ function findTrackAnywhere(id) {
   );
 }
 
+let deferredInstallPrompt = null;
+
+function setupPWA() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(error => console.warn("VYRA SW:", error));
+  }
+
+  const installBtn = $("#installBtn");
+  if (!installBtn) return;
+
+  window.addEventListener("beforeinstallprompt", event => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installBtn.hidden = false;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    try { await deferredInstallPrompt.userChoice; } catch {}
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+    toast("✓ VYRA uygulama olarak yüklendi");
+  });
+}
+
 function boot() {
+  setupPWA();
+  if (window.lucide) window.lucide.createIcons();
   loadState();
   bindEvents();
   renderEverything();
