@@ -132,7 +132,7 @@ function renderCard(track) {
   return (
     '<article class="card" data-id="' + escapeHtml(t.id) + '">' +
       '<button class="card-open" data-detail-id="' + escapeHtml(t.id) + '">' +
-        '<div class="cover image-cover" style="background-image:url("' + escapeHtml(t.thumbnail) + '")"></div>' +
+        '<div class="cover image-cover" style="background-image:url(\'' + escapeHtml(t.thumbnail) + '\')"></div>' +
         '<b title="' + escapeHtml(t.title) + '">' + escapeHtml(t.title) + "</b>" +
         "<small>" + escapeHtml(t.artist) + "</small>" +
       "</button>" +
@@ -540,8 +540,8 @@ function initYouTubePlayer() {
   if (!window.YT || !YT.Player || player) return;
 
   player = new YT.Player("youtubePlayer", {
-    width: "1",
-    height: "1",
+    width: "200",
+    height: "200",
     videoId: "",
     playerVars: {
       autoplay: 0,
@@ -565,7 +565,8 @@ function initYouTubePlayer() {
         }
       },
       onStateChange: handlePlayerState,
-      onError: () => toast("Bu YouTube videosu oynatılamıyor. Başka bir sonuç seç.")
+      onError: error => { console.warn("YouTube player error:", error); toast("Bu YouTube videosu oynatılamıyor. Başka bir sonuç seç."); },
+      onAutoplayBlocked: () => toast("Otomatik oynatma engellendi. Tekrar PLAY düğmesine dokun.")
     }
   });
 }

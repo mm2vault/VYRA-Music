@@ -173,3 +173,48 @@ button{touch-action:manipulation}
 @media(max-width:700px){.search-filters{width:100%}.search-filters button{flex:1}.entity-inner{grid-template-columns:1fr;padding:82px 18px 100px;gap:24px}.entity-art{width:min(58vw,250px);height:min(58vw,250px);margin:auto}.entity-info{text-align:center}.entity-info h1{font-size:34px}.entity-tracks{text-align:left}.entity-track{grid-template-columns:25px 42px 1fr 25px}.entity-track small{display:none}.entity-track img{width:42px;height:42px}.entity-close{right:15px;top:14px;width:38px;height:38px}}
 
 @keyframes splashAutoHide{0%,68%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}
+
+/* VYRA stability + responsive cleanup */
+.cover.image-cover{background-size:cover;background-position:center;background-repeat:no-repeat}
+.thumb-image{display:block;object-fit:cover}
+.now-art{background-size:cover;background-position:center;background-repeat:no-repeat}
+#youtubePlayer{position:fixed!important;width:200px!important;height:200px!important;left:-9999px!important;top:-9999px!important;right:auto!important;bottom:auto!important;opacity:0!important;pointer-events:none!important;overflow:visible!important}
+#youtubePlayer iframe{width:200px!important;height:200px!important;position:absolute!important;left:0!important;top:0!important;border:0!important;opacity:0!important;pointer-events:none!important}
+.youtube-dock{display:none!important}
+button,input{touch-action:manipulation}
+img{max-width:100%;height:auto}
+@media(max-width:900px){
+  main{min-width:0}
+  .hero{overflow:hidden}
+  .search{min-width:0}
+  .search input{min-width:0}
+  .result{min-width:0}
+  .result-main{min-width:0}
+  .result-main .meta{min-width:0}
+  .playlist-card,.entity-card{min-width:0}
+  .player{min-width:0}
+  .now{min-width:0}
+  .controls{min-width:0}
+}
+@media(max-width:550px){
+  main{padding-left:12px!important;padding-right:12px!important}
+  header{gap:8px}
+  .search{padding:0 10px}
+  .search input{padding:11px 6px;font-size:12px}
+  .profile{flex:none}
+  .hero-copy{max-width:100%!important}
+  .hero-art{pointer-events:none}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{min-width:0}
+  .card-open b,.card-open small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .result{gap:8px;padding:8px}
+  .result-main{padding:0!important;min-width:0}
+  .result .thumb{width:48px;height:48px;flex:none}
+  .result-play,.result-like{padding:8px!important;flex:none}
+  .now-copy{min-width:0}
+  .now b,.now small{max-width:none!important}
+  .controls{min-width:0!important}
+  .progress{gap:5px}
+  .progress input{min-width:55px}
+  .mobile-nav{padding-bottom:env(safe-area-inset-bottom)}
+}
