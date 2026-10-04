@@ -1,0 +1,13 @@
+{
+  "name":"VYRA Music",
+  "short_name":"VYRA",
+  "description":"VYRA Music — YouTube müziklerini kendi modern oynatıcında keşfet.",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"portrait-primary",
+  "background_color":"#08070d",
+  "theme_color":"#9b5cff",
+  "categories":["music","entertainment"],
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
