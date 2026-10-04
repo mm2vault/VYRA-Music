@@ -3,7 +3,7 @@ const $$ = (s) => document.querySelectorAll(s);
 
 const YOUTUBE_API_KEY = "AIzaSyAPcOxJ9CBs75V-WSXg7v0YnYW-FAuCxe8";
 
-let current=null, playing=false, queue=[], queueIndex=-1, player=null, playerReady=false, progressTimer=null;
+let current=null, screenTrack=null, playing=false, queue=[], queueIndex=-1, player=null, playerReady=false, progressTimer=null;
 let favs=JSON.parse(localStorage.getItem("vyraFavs")||"[]");
 let history=JSON.parse(localStorage.getItem("vyraHistory")||"[]");
 let lists=JSON.parse(localStorage.getItem("vyraLists")||"[]");
@@ -31,7 +31,7 @@ function onYouTubeIframeAPIReady(){
   }});
 }
 function findTrack(id){return [...queue,...favs,...history].find(x=>x.id===id)}
-function openTrackScreen(t=current){if(!t?.id)return;const screen=$("#trackScreen");if(!screen)return;$("#trackBackdrop").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenTitle").textContent=t.title;$("#trackScreenArtist").textContent=t.artist;$("#trackScreenYear").textContent=t.publishedAt?new Date(t.publishedAt).getFullYear()+" • VYRA MUSIC":"VYRA MUSIC";$("#trackScreenLike").textContent=favs.some(x=>x.id===t.id)?"♥":"♡";screen.classList.add("open");screen.setAttribute("aria-hidden","false");$("#trackScreenPlay").textContent=playing&&current?.id===t.id?"Ⅱ":"▶"}
+function openTrackScreen(t=current){if(!t?.id)return;screenTrack=t;const screen=$("#trackScreen");if(!screen)return;$("#trackBackdrop").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenTitle").textContent=t.title;$("#trackScreenArtist").textContent=t.artist;$("#trackScreenYear").textContent=t.publishedAt?new Date(t.publishedAt).getFullYear()+" • VYRA MUSIC":"VYRA MUSIC";$("#trackScreenLike").textContent=favs.some(x=>x.id===t.id)?"♥":"♡";screen.classList.add("open");screen.setAttribute("aria-hidden","false");$("#trackScreenPlay").textContent=playing&&current?.id===t.id?"Ⅱ":"▶"}
 function closeTrackScreen(){const x=$("#trackScreen");if(x){x.classList.remove("open");x.setAttribute("aria-hidden","true")}}
 function updateScreenProgress(){if(!playerReady||!player?.getDuration)return;const d=player.getDuration()||0,v=player.getCurrentTime()||0,x=$("#screenProgress");if(x){x.max=d||100;x.value=v;x.style.setProperty("--progress",d?(v/d*100)+"%":"0%")}$("#screenCurrent").textContent=formatTime(v);$("#screenDuration").textContent=formatTime(d)}
 
@@ -82,9 +82,9 @@ $("#progress").oninput=e=>{const v=Number(e.target.value)||0;const max=Number(e.
 $("#newPlaylist").onclick=()=>{const name=prompt("Çalma listesine isim ver:");if(!name?.trim())return;lists.push(name.trim());saveState();render();toast("Liste oluşturuldu")};
 $("#closeYoutube").onclick=()=>$("#youtubeDock").classList.remove("open");$("#mobileMenu").onclick=()=>$(".sidebar").classList.toggle("open");
 $("#profileBtn").onclick=()=>{$("#profilePanel").classList.add("open");updateProfileStats()};
-$("#trackScreenClose").onclick=closeTrackScreen;$("#trackScreenPlay").onclick=()=>{if(current)togglePlayback()};$("#screenPlaySmall").onclick=()=>{if(current)togglePlayback()};$("#screenPrev").onclick=prevTrack;$("#screenNext").onclick=nextTrack;
-$("#trackScreenLike").onclick=()=>{if(current){toggleFav(current);openTrackScreen(current)}};
-$("#trackScreenAdd").onclick=()=>{if(!current)return;const name=prompt("Çalma listesi adı:");if(!name?.trim())return;const n=name.trim();if(!lists.includes(n))lists.push(n);saveState();render();toast("Listeye hazırlandı • "+n)};
+$("#trackScreenClose").onclick=closeTrackScreen;$("#trackScreenPlay").onclick=()=>{if(screenTrack){if(current?.id!==screenTrack.id)playTrack(screenTrack);else togglePlayback()}};$("#screenPlaySmall").onclick=()=>{if(screenTrack){if(current?.id!==screenTrack.id)playTrack(screenTrack);else togglePlayback()}};$("#screenPrev").onclick=prevTrack;$("#screenNext").onclick=nextTrack;
+$("#trackScreenLike").onclick=()=>{if(screenTrack){toggleFav(screenTrack);openTrackScreen(screenTrack)}};
+$("#trackScreenAdd").onclick=()=>{if(!screenTrack)return;const name=prompt("Çalma listesi adı:");if(!name?.trim())return;const n=name.trim();if(!lists.includes(n))lists.push(n);saveState();render();toast("Listeye hazırlandı • "+n)};
 $("#screenProgress").oninput=e=>{const v=Number(e.target.value)||0,max=Number(e.target.max)||100;e.target.style.setProperty("--progress",((v/max)*100)+"%");if(playerReady)player.seekTo(v,true)};
 $("#profileClose").onclick=()=>$("#profilePanel").classList.remove("open");
 $("#profileLibrary").onclick=()=>{$("#profilePanel").classList.remove("open");page("library")};
