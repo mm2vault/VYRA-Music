@@ -778,7 +778,14 @@ function closeEntity() {
   screen.setAttribute("aria-hidden", "true");
 }
 
-function playTrack(track, index = -1) {
+const OFFLINE_DB="vyraOffline";const OFFLINE_STORE="tracks";
+function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" in window))return reject(new Error("Çevrimdışı depolama desteklenmiyor."));const request=indexedDB.open(OFFLINE_DB,1);request.onupgradeneeded=()=>request.result.createObjectStore(OFFLINE_STORE,{keyPath:"id"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error("Çevrimdışı depolama açılamadı."));});}
+async function saveOfflineTrack(track){const t=normalizeTrack(track);if(!t)return;try{const db=await openOfflineDB();await new Promise((resolve,reject)=>{const tx=db.transaction(OFFLINE_STORE,"readwrite");tx.objectStore(OFFLINE_STORE).put({...t,savedAt:Date.now(),offlineAudio:false});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});toast("✓ Şarkı çevrimdışı koleksiyonuna kaydedildi");toast("Not: YouTube sesi resmi oynatıcı nedeniyle indirilemez.");}catch(error){console.warn("VYRA offline storage:",error);toast("Çevrimdışı kayıt kullanılamıyor.");}}
+async function isOfflineSaved(id){try{const db=await openOfflineDB();return await new Promise(resolve=>{const tx=db.transaction(OFFLINE_STORE,"readonly");const req=tx.objectStore(OFFLINE_STORE).get(id);req.onsuccess=()=>resolve(Boolean(req.result));req.onerror=()=>resolve(false);});}catch{return false;}}
+function updateOfflineButton(track){if(!track)return;isOfflineSaved(track.id).then(saved=>["#downloadBtn","#trackScreenDownload"].forEach(selector=>{const button=$(selector);if(button){button.textContent=saved?"✓":"⇩";button.title=saved?"Çevrimdışı koleksiyonda":"Çevrimdışı kaydet";button.classList.toggle("saved",saved);}}));}
+function updateOfflineStatus(){const bar=$("#offlineBar");if(!bar)return;const offline=!navigator.onLine;bar.hidden=!offline;document.body.classList.toggle("is-offline",offline);}
+function setupOfflineMode(){updateOfflineStatus();window.addEventListener("online",updateOfflineStatus);window.addEventListener("offline",updateOfflineStatus);updateOfflineButton(current);}
+\nfunction playTrack(track, index = -1) {
   const t = normalizeTrack(track);
   if (!t) return;
 
