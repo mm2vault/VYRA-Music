@@ -1,0 +1,65 @@
+name: VYRA hourly QA
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run QA
+        id: qa
+        run: node maintenance/vyra-qa.mjs
+
+      - name: Auto-fix known escape corruption
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("app.js")
+          s = p.read_text(encoding="utf-8")
+          s2 = s.replace("\\\\n", "\n")
+          if s2 != s:
+              p.write_text(s2, encoding="utf-8")
+          PY
+          node maintenance/vyra-qa.mjs
+
+      - name: Commit safe auto-fixes
+        if: success() && steps.qa.outcome == 'failure'
+        run: |
+          if git diff --quiet; then
+            echo "No safe auto-fix was needed."
+            exit 0
+          fi
+          git config user.name "VYRA Maintenance Bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.js
+          git commit -m "fix: auto-repair known app syntax corruption"
+          git push
+
+      - name: Open issue on unexpected failures
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh issue list --state open --search "VYRA hourly QA" --limit 1 | grep -q "VYRA hourly QA"; then
+            gh issue create               --title "VYRA hourly QA failure"               --body "The hourly VYRA QA workflow detected a failure that could not be repaired automatically. Check the Actions run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
