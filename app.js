@@ -14,7 +14,7 @@ function isConfigured(){return YOUTUBE_API_KEY&&!YOUTUBE_API_KEY.includes("YOUR_
 function formatTime(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
 function trackFromVideo(item){const s=item.snippet||{};return{id:item.id?.videoId||item.id,title:s.title||"Bilinmeyen şarkı",artist:s.channelTitle||"YouTube",thumbnail:s.thumbnails?.high?.url||s.thumbnails?.medium?.url||s.thumbnails?.default?.url||"",publishedAt:s.publishedAt||""}}
 function card(t){return `<article class="card" data-id="${escapeHtml(t.id)}"><button class="card-open" data-detail-id="${escapeHtml(t.id)}"><div class="cover image-cover" style="background-image:url('${escapeHtml(t.thumbnail)}')"></div><b title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></button></article>`}
-function result(t){const liked=favs.some(x=>x.id===t.id);return `<div class="result"><button class="result-main" data-play-id="${escapeHtml(t.id)}"><img class="thumb thumb-image" src="${escapeHtml(t.thumbnail)}" alt=""><span class="meta"><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></span></button><button class="result-play" data-play-id="${escapeHtml(t.id)}">▶</button><button class="result-like" data-like-id="${escapeHtml(t.id)}">${liked?"♥":"♡"}</button></div>`}
+function result(t){const liked=favs.some(x=>x.id===t.id);return `<div class="result"><button class="result-main" data-detail-id="${escapeHtml(t.id)}"><img class="thumb thumb-image" src="${escapeHtml(t.thumbnail)}" alt=""><span class="meta"><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></span></button><button class="result-play" data-play-id="${escapeHtml(t.id)}">▶</button><button class="result-like" data-like-id="${escapeHtml(t.id)}">${liked?"♥":"♡"}</button></div>`}
 function render(){ $("#playlistList").innerHTML=lists.map(x=>`<div>♫ ${escapeHtml(x)}</div>`).join("");renderLibrary("favorites")}
 function renderLibrary(tab){const box=$("#libraryContent");if(tab==="favorites")box.innerHTML=favs.length?favs.map(result).join(""):"<p class='empty'>Henüz favorin yok. Bir şarkının ♡ düğmesine bas.</p>";else if(tab==="history")box.innerHTML=history.length?history.map(result).join(""):"<p class='empty'>Henüz dinleme geçmişin yok.</p>";else box.innerHTML=lists.length?lists.map(x=>`<div class="playlist-row">♫ <b>${escapeHtml(x)}</b></div>`).join(""):"<p class='empty'>Henüz çalma listen yok.</p>"}
 function page(id){$$(".page").forEach(x=>x.classList.remove("active-page"));$("#"+id)?.classList.add("active-page");$$(".nav").forEach(x=>x.classList.toggle("active",x.dataset.page===id));if(innerWidth<901)$(".sidebar")?.classList.remove("open")}
@@ -23,9 +23,6 @@ function addHistory(t){history=[t,...history.filter(x=>x.id!==t.id)].slice(0,30)
 function toggleFav(t){const i=favs.findIndex(x=>x.id===t.id);if(i>=0){favs.splice(i,1);toast("Favorilerden çıkarıldı")}else{favs.unshift(t);toast("♥ Favorilere eklendi")}saveState();updateLikeButton();renderLibrary("favorites")}
 function updateLikeButton(){if(!current)return;$("#likeBtn").textContent=favs.some(x=>x.id===current.id)?"♥":"♡";updateProfileStats()}
 function updateProfileStats(){$("#favCount")?.replaceChildren(document.createTextNode(favs.length));$("#historyCount")?.replaceChildren(document.createTextNode(history.length));$("#playlistCount")?.replaceChildren(document.createTextNode(lists.length))}
-function openTrackModal(t=current){if(!t?.id)return;$("#trackModalArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackModalTitle").textContent=t.title;$("#trackModalArtist").textContent=t.artist;$("#trackModal").classList.add("open");$("#trackModalLike").textContent=favs.some(x=>x.id===t.id)?"♥ Favorilerde":"♡ Favoriye ekle";$("#trackModalPlay").onclick=()=>{playTrack(t);$("#trackModal").classList.remove("open")};$("#trackModalLike").onclick=()=>{toggleFav(t);openTrackModal(t)}}
-function closeTrackModal(){$("#trackModal")?.classList.remove("open")}
-
 function onYouTubeIframeAPIReady(){
   player=new YT.Player("youtubePlayer",{width:"100%",height:"100%",videoId:"",playerVars:{autoplay:0,controls:1,rel:0,modestbranding:1,playsinline:1},events:{
     onReady:()=>{playerReady=true;player.setVolume(Number($("#volume").value));if(current?.id){player.loadVideoById(current.id);player.playVideo()}},
@@ -85,15 +82,13 @@ $("#progress").oninput=e=>{const v=Number(e.target.value)||0;const max=Number(e.
 $("#newPlaylist").onclick=()=>{const name=prompt("Çalma listesine isim ver:");if(!name?.trim())return;lists.push(name.trim());saveState();render();toast("Liste oluşturuldu")};
 $("#closeYoutube").onclick=()=>$("#youtubeDock").classList.remove("open");$("#mobileMenu").onclick=()=>$(".sidebar").classList.toggle("open");
 $("#profileBtn").onclick=()=>{$("#profilePanel").classList.add("open");updateProfileStats()};
-$("#trackScreenClose").onclick=closeTrackScreen;$("#trackScreenPlay").onclick=()=>{if(current)togglePlayback()};$("#screenPlaySmall").onclick=()=>{if(current)togglePlayback()};$("#screenPrev").onclick=prevTrack;$("#screenNext").onclick=nextTrack);
+$("#trackScreenClose").onclick=closeTrackScreen;$("#trackScreenPlay").onclick=()=>{if(current)togglePlayback()};$("#screenPlaySmall").onclick=()=>{if(current)togglePlayback()};$("#screenPrev").onclick=prevTrack;$("#screenNext").onclick=nextTrack;
 $("#trackScreenLike").onclick=()=>{if(current){toggleFav(current);openTrackScreen(current)}};
 $("#trackScreenAdd").onclick=()=>{if(!current)return;const name=prompt("Çalma listesi adı:");if(!name?.trim())return;const n=name.trim();if(!lists.includes(n))lists.push(n);saveState();render();toast("Listeye hazırlandı • "+n)};
 $("#screenProgress").oninput=e=>{const v=Number(e.target.value)||0,max=Number(e.target.max)||100;e.target.style.setProperty("--progress",((v/max)*100)+"%");if(playerReady)player.seekTo(v,true)};
 $("#profileClose").onclick=()=>$("#profilePanel").classList.remove("open");
 $("#profileLibrary").onclick=()=>{$("#profilePanel").classList.remove("open");page("library")};
-$("#trackClose").onclick=closeTrackModal;
-$("#trackModal").addEventListener("click",e=>{if(e.target.id==="trackModal")closeTrackModal()});
-$("#nowArt").onclick=()=>openTrackModal(current);
+$("#nowArt").onclick=()=>openTrackScreen(current);
 setTimeout(()=>$("#splash")?.classList.add("hide"),1400);
 $$(".nav,.mobile-nav button").forEach(b=>b.onclick=()=>page(b.dataset.page));$$("[data-page-target]").forEach(b=>b.onclick=()=>page(b.dataset.pageTarget));
 $$(".chips button").forEach(b=>b.onclick=()=>{$("#bigSearch").value=b.dataset.query;doSearch(b.dataset.query)});
