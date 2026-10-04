@@ -25,7 +25,7 @@ function updateLikeButton(){if(!current)return;$("#likeBtn").textContent=favs.so
 
 function onYouTubeIframeAPIReady(){
   player=new YT.Player("youtubePlayer",{width:"100%",height:"100%",videoId:"",playerVars:{autoplay:0,controls:1,rel:0,modestbranding:1,playsinline:1},events:{
-    onReady:()=>{playerReady=true;player.setVolume(Number($("#volume").value))},
+    onReady:()=>{playerReady=true;player.setVolume(Number($("#volume").value));if(current?.id){player.loadVideoById(current.id);player.playVideo()}},
     onStateChange:onPlayerStateChange,
     onError:()=>toast("YouTube bu videoyu oynatamadı. Başka bir sonuç deneyelim.")
   }});
@@ -37,7 +37,7 @@ function onPlayerStateChange(event){
   else if(event.data===YT.PlayerState.PAUSED){playing=false;$("#playBtn").textContent="▶";stopProgress()}
   else if(event.data===YT.PlayerState.ENDED){playing=false;$("#playBtn").textContent="▶";stopProgress();nextTrack()}
 }
-function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration)},500)}
+function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration)},100)}
 function stopProgress(){clearInterval(progressTimer);progressTimer=null}
 
 function playTrack(t,index=-1){
@@ -46,7 +46,7 @@ function playTrack(t,index=-1){
   if(index>=0)queueIndex=index;else{const existing=queue.findIndex(x=>x.id===t.id);if(existing>=0)queueIndex=existing;else{queue=[t];queueIndex=0}}
   $("#nowTitle").textContent=t.title;$("#nowArtist").textContent=t.artist;$("#nowArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#nowArt").textContent="";$("#nowArt").classList.add("has-image");$("#youtubeLabel").textContent=t.title;$("#youtubeDock").classList.add("open");document.title=t.title+" — VYRA";addHistory(t);updateLikeButton();
   if(!playerReady){toast("Player hazırlanıyor…");return}
-  player.loadVideoById(t.id);player.setVolume(Number($("#volume").value))
+  player.loadVideoById(t.id);player.setVolume(Number($("#volume").value));player.playVideo()
 }
 function togglePlayback(){if(!current){if(queue.length)playTrack(queue[0],0);else toast("Önce bir YouTube şarkısı seç");return}if(!playerReady)return;if(player.getPlayerState()===YT.PlayerState.PLAYING)player.pauseVideo();else player.playVideo()}
 function nextTrack(){if(!queue.length)return;queueIndex=(queueIndex+1)%queue.length;playTrack(queue[queueIndex],queueIndex)}
