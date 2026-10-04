@@ -1,7 +1,7 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
 
-const YOUTUBE_API_KEY = "YOUR_YOUTUBE_DATA_API_KEY";
+const YOUTUBE_API_KEY = "AIzaSyAPcOxJ9CBs75V-WSXg7v0YnYW-FAuCxe8";
 
 let current=null, playing=false, queue=[], queueIndex=-1, player=null, playerReady=false, progressTimer=null;
 let favs=JSON.parse(localStorage.getItem("vyraFavs")||"[]");
