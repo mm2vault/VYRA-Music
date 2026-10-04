@@ -52,7 +52,7 @@
 
     <section id="library" class="page">
       <div class="page-title"><span class="eyebrow">KİTAPLIĞIM</span><h1>Senin koleksiyonun.</h1><p>Favorilerin ve son dinlediklerin burada.</p></div>
-      <div class="library-tabs"><button class="selected" data-library-tab="favorites">Favoriler</button><button data-library-tab="playlists">Çalma listeleri</button><button data-library-tab="history">Son dinlenenler</button></div>
+      <div class="library-toolbar"><div class="library-tabs"><button class="selected" data-library-tab="favorites">Favoriler</button><button data-library-tab="playlists">Çalma listeleri</button><button data-library-tab="history">Son dinlenenler</button></div><button id="libraryNewPlaylist" class="ghost">＋ Yeni liste</button></div>
       <div id="libraryContent" class="results"></div>
     </section>
   </main>
@@ -99,6 +99,41 @@
     <div class="profile-body"><span class="eyebrow">VYRA PROFILE</span><h2>Misafir</h2><p>VYRA müzik evrenindeki koleksiyonun.</p><div class="profile-stats"><div><b id="favCount">0</b><small>Favori</small></div><div><b id="historyCount">0</b><small>Dinleme</small></div><div><b id="playlistCount">0</b><small>Liste</small></div></div><button id="profileLibrary" class="primary profile-action">Kitaplığımı aç →</button></div>
   </div>
 
+
+  <div id="playlistCreateModal" class="ui-modal" aria-hidden="true">
+    <div class="ui-modal-card">
+      <button class="ui-modal-close" data-close-modal="playlistCreateModal">×</button>
+      <span class="eyebrow">YENİ KOLEKSİYON</span>
+      <h2>Çalma listesi oluştur</h2>
+      <p>Ruh haline, güne veya arkadaşlarına özel bir liste yap.</p>
+      <label class="ui-label">Liste adı</label>
+      <input id="playlistNameInput" class="ui-input" maxlength="50" placeholder="Örn. Night Drive">
+      <div class="ui-modal-actions"><button class="ghost" data-close-modal="playlistCreateModal">Vazgeç</button><button id="playlistCreateSubmit" class="primary">Oluştur</button></div>
+    </div>
+  </div>
+
+  <div id="playlistPickerModal" class="ui-modal" aria-hidden="true">
+    <div class="ui-modal-card ui-picker">
+      <button class="ui-modal-close" data-close-modal="playlistPickerModal">×</button>
+      <span class="eyebrow">PLAYLIST'E EKLE</span>
+      <h2>Hangi listeye?</h2>
+      <p id="playlistPickerTrack">Şarkını seç.</p>
+      <div id="playlistPickerList" class="playlist-picker-list"></div>
+      <button id="pickerNewPlaylist" class="ui-full-btn">＋ Yeni çalma listesi</button>
+    </div>
+  </div>
+
+  <div id="playlistViewModal" class="playlist-view-modal" aria-hidden="true">
+    <div class="playlist-view-card">
+      <button class="ui-modal-close" id="playlistViewClose">×</button>
+      <div class="playlist-view-head">
+        <div id="playlistViewArt" class="playlist-view-art">♫</div>
+        <div class="playlist-view-copy"><span class="eyebrow">VYRA PLAYLIST</span><h2 id="playlistViewTitle">Playlist</h2><p id="playlistViewMeta">0 şarkı</p></div>
+      </div>
+      <div class="playlist-view-actions"><button id="playlistPlayAll" class="primary">▶ Tümünü çal</button><button id="playlistShuffle" class="ghost">↝ Karıştır</button></div>
+      <div id="playlistViewTracks" class="playlist-view-tracks"></div>
+    </div>
+  </div>
   <div id="toast"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="app.js"></script>
