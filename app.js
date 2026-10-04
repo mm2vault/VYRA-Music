@@ -54,8 +54,8 @@ function updateScreenProgress(){if(!playerReady||!player?.getDuration)return;con
 window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady;
 
 function onPlayerStateChange(event){
-  if(event.data===YT.PlayerState.PLAYING){playing=true;$("#trackScreenPlay")?.textContent="Ⅱ";$("#playBtn").textContent="Ⅱ";$(".player")?.classList.add("is-playing");startProgress()}
-  else if(event.data===YT.PlayerState.PAUSED){playing=false;$("#trackScreenPlay")?.textContent="▶";$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress()}
+  if(event.data===YT.PlayerState.PLAYING){playing=true;if($("#trackScreenPlay"))$("#trackScreenPlay").textContent="Ⅱ";$("#playBtn").textContent="Ⅱ";$(".player")?.classList.add("is-playing");startProgress()}
+  else if(event.data===YT.PlayerState.PAUSED){playing=false;if($("#trackScreenPlay"))$("#trackScreenPlay").textContent="▶";$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress()}
   else if(event.data===YT.PlayerState.ENDED){playing=false;$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress();nextTrack()}
 }
 function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#progress").style.setProperty("--progress",duration?((currentTime/duration)*100)+"%":"0%");$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration);updateScreenProgress()},100)}
