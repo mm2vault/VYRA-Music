@@ -514,3 +514,8 @@ header{height:76px;background:linear-gradient(#090913f5,#09091300)}
   .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:12px}
   .card{min-width:142px;max-width:142px;scroll-snap-align:start}
 }
+
+
+/* VYRA mobile safety */
+html,body{overflow-x:hidden;}
+@media(max-width:640px){.search kbd{display:none}.search{min-width:0}.search input{min-width:0}.hero-copy{max-width:72%}.hero p{font-size:12px}.mobile-nav{padding-bottom:env(safe-area-inset-bottom)}.player{padding-bottom:calc(7px + env(safe-area-inset-bottom))!important}}
