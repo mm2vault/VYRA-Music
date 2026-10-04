@@ -798,14 +798,16 @@ async function verifyConnection(){
 function updateOfflineStatus(forceOffline=null){
   const bar=$("#offlineBar");
   if(!bar)return;
-  // The browser's online flag can be stale; only show this bar when
-  // the browser explicitly reports offline or we explicitly request it.
-  const offline=forceOffline===true || (forceOffline===null && navigator.onLine===false);
+  // Do not use navigator.onLine for the normal UI: it can report false
+  // negatives on GitHub Pages, mobile Chrome, PWAs and WebViews.
+  // The offline library remains available independently.
+  const offline=forceOffline===true;
   bar.hidden=!offline;
   document.body.classList.toggle("is-offline",offline);
 }
 function setupOfflineMode(){
-  updateOfflineStatus(navigator.onLine===false);
+  // Start hidden. Only an explicit offline event may show the banner.
+  updateOfflineStatus(false);
   window.addEventListener("online",()=>updateOfflineStatus(false));
   window.addEventListener("offline",()=>updateOfflineStatus(true));
   updateOfflineButton(current);
