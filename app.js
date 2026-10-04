@@ -37,14 +37,14 @@ function onPlayerStateChange(event){
   else if(event.data===YT.PlayerState.PAUSED){playing=false;$("#playBtn").textContent="▶";stopProgress()}
   else if(event.data===YT.PlayerState.ENDED){playing=false;$("#playBtn").textContent="▶";stopProgress();nextTrack()}
 }
-function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration)},100)}
+function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#progress").style.setProperty("--progress",duration?((currentTime/duration)*100)+"%":"0%");$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration)},100)}
 function stopProgress(){clearInterval(progressTimer);progressTimer=null}
 
 function playTrack(t,index=-1){
   if(!t?.id)return;
   current=t;
   if(index>=0)queueIndex=index;else{const existing=queue.findIndex(x=>x.id===t.id);if(existing>=0)queueIndex=existing;else{queue=[t];queueIndex=0}}
-  $("#nowTitle").textContent=t.title;$("#nowArtist").textContent=t.artist;$("#nowArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#nowArt").textContent="";$("#nowArt").classList.add("has-image");$("#youtubeLabel").textContent=t.title;$("#youtubeDock").classList.add("open");document.title=t.title+" — VYRA";addHistory(t);updateLikeButton();
+  $("#nowTitle").textContent=t.title;$("#nowArtist").textContent=t.artist;$("#nowArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#nowArt").textContent="";$("#nowArt").classList.add("has-image");$("#youtubeLabel").textContent=t.title;document.title=t.title+" — VYRA";addHistory(t);updateLikeButton();
   if(!playerReady){toast("Player hazırlanıyor…");return}
   player.loadVideoById(t.id);player.setVolume(Number($("#volume").value));player.playVideo()
 }
@@ -73,7 +73,7 @@ $("#searchInput").addEventListener("keydown",e=>{if(e.key==="Enter"){$("#bigSear
 $("#bigSearchBtn").onclick=()=>doSearch($("#bigSearch").value);$("#bigSearch").onkeydown=e=>{if(e.key==="Enter")doSearch(e.target.value)};
 $("#startBtn").onclick=()=>{page("search");$("#bigSearch").value="popular music";doSearch("popular music")};
 $("#playBtn").onclick=togglePlayback;$("#nextBtn").onclick=nextTrack;$("#prevBtn").onclick=prevTrack;$("#likeBtn").onclick=()=>current&&toggleFav(current);
-$("#progress").oninput=e=>{if(playerReady)player.seekTo(Number(e.target.value),true)};$("#volume").oninput=e=>{if(playerReady)player.setVolume(Number(e.target.value))};
+$("#progress").oninput=e=>{const v=Number(e.target.value)||0;const max=Number(e.target.max)||100;e.target.style.setProperty("--progress",((v/max)*100)+"%");if(playerReady)player.seekTo(v,true)};$("#volume").oninput=e=>{if(playerReady)player.setVolume(Number(e.target.value))};
 $("#newPlaylist").onclick=()=>{const name=prompt("Çalma listesine isim ver:");if(!name?.trim())return;lists.push(name.trim());saveState();render();toast("Liste oluşturuldu")};
 $("#closeYoutube").onclick=()=>$("#youtubeDock").classList.remove("open");$("#mobileMenu").onclick=()=>$(".sidebar").classList.toggle("open");
 $$(".nav,.mobile-nav button").forEach(b=>b.onclick=()=>page(b.dataset.page));$$("[data-page-target]").forEach(b=>b.onclick=()=>page(b.dataset.pageTarget));
