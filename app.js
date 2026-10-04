@@ -13,7 +13,7 @@ function escapeHtml(value=""){return String(value).replace(/[&<>"']/g,c=>({"&":"
 function isConfigured(){return YOUTUBE_API_KEY&&!YOUTUBE_API_KEY.includes("YOUR_")}
 function formatTime(seconds){seconds=Math.max(0,Math.floor(Number(seconds)||0));return Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0")}
 function trackFromVideo(item){const s=item.snippet||{};return{id:item.id?.videoId||item.id,title:s.title||"Bilinmeyen şarkı",artist:s.channelTitle||"YouTube",thumbnail:s.thumbnails?.high?.url||s.thumbnails?.medium?.url||s.thumbnails?.default?.url||"",publishedAt:s.publishedAt||""}}
-function card(t){return `<article class="card" data-id="${escapeHtml(t.id)}"><div class="cover image-cover" style="background-image:url('${escapeHtml(t.thumbnail)}')"></div><b title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></article>`}
+function card(t){return `<article class="card" data-id="${escapeHtml(t.id)}"><button class="card-open" data-detail-id="${escapeHtml(t.id)}"><div class="cover image-cover" style="background-image:url('${escapeHtml(t.thumbnail)}')"></div><b title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></button></article>`}
 function result(t){const liked=favs.some(x=>x.id===t.id);return `<div class="result"><button class="result-main" data-play-id="${escapeHtml(t.id)}"><img class="thumb thumb-image" src="${escapeHtml(t.thumbnail)}" alt=""><span class="meta"><b>${escapeHtml(t.title)}</b><small>${escapeHtml(t.artist)}</small></span></button><button class="result-play" data-play-id="${escapeHtml(t.id)}">▶</button><button class="result-like" data-like-id="${escapeHtml(t.id)}">${liked?"♥":"♡"}</button></div>`}
 function render(){ $("#playlistList").innerHTML=lists.map(x=>`<div>♫ ${escapeHtml(x)}</div>`).join("");renderLibrary("favorites")}
 function renderLibrary(tab){const box=$("#libraryContent");if(tab==="favorites")box.innerHTML=favs.length?favs.map(result).join(""):"<p class='empty'>Henüz favorin yok. Bir şarkının ♡ düğmesine bas.</p>";else if(tab==="history")box.innerHTML=history.length?history.map(result).join(""):"<p class='empty'>Henüz dinleme geçmişin yok.</p>";else box.innerHTML=lists.length?lists.map(x=>`<div class="playlist-row">♫ <b>${escapeHtml(x)}</b></div>`).join(""):"<p class='empty'>Henüz çalma listen yok.</p>"}
@@ -33,21 +33,26 @@ function onYouTubeIframeAPIReady(){
     onError:()=>toast("YouTube bu videoyu oynatamadı. Başka bir sonuç deneyelim.")
   }});
 }
+function findTrack(id){return [...queue,...favs,...history].find(x=>x.id===id)}
+function openTrackScreen(t=current){if(!t?.id)return;const screen=$("#trackScreen");if(!screen)return;$("#trackBackdrop").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackScreenTitle").textContent=t.title;$("#trackScreenArtist").textContent=t.artist;$("#trackScreenYear").textContent=t.publishedAt?new Date(t.publishedAt).getFullYear()+" • VYRA MUSIC":"VYRA MUSIC";$("#trackScreenLike").textContent=favs.some(x=>x.id===t.id)?"♥":"♡";screen.classList.add("open");screen.setAttribute("aria-hidden","false");$("#trackScreenPlay").textContent=playing&&current?.id===t.id?"Ⅱ":"▶"}
+function closeTrackScreen(){const x=$("#trackScreen");if(x){x.classList.remove("open");x.setAttribute("aria-hidden","true")}}
+function updateScreenProgress(){if(!playerReady||!player?.getDuration)return;const d=player.getDuration()||0,v=player.getCurrentTime()||0,x=$("#screenProgress");if(x){x.max=d||100;x.value=v;x.style.setProperty("--progress",d?(v/d*100)+"%":"0%")}$("#screenCurrent").textContent=formatTime(v);$("#screenDuration").textContent=formatTime(d)}
+
 window.onYouTubeIframeAPIReady=onYouTubeIframeAPIReady;
 
 function onPlayerStateChange(event){
-  if(event.data===YT.PlayerState.PLAYING){playing=true;$("#playBtn").textContent="Ⅱ";$(".player")?.classList.add("is-playing");startProgress()}
-  else if(event.data===YT.PlayerState.PAUSED){playing=false;$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress()}
+  if(event.data===YT.PlayerState.PLAYING){playing=true;$("#trackScreenPlay")?.textContent="Ⅱ";$("#playBtn").textContent="Ⅱ";$(".player")?.classList.add("is-playing");startProgress()}
+  else if(event.data===YT.PlayerState.PAUSED){playing=false;$("#trackScreenPlay")?.textContent="▶";$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress()}
   else if(event.data===YT.PlayerState.ENDED){playing=false;$("#playBtn").textContent="▶";$(".player")?.classList.remove("is-playing");stopProgress();nextTrack()}
 }
-function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#progress").style.setProperty("--progress",duration?((currentTime/duration)*100)+"%":"0%");$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration)},100)}
+function startProgress(){stopProgress();progressTimer=setInterval(()=>{if(!playerReady||!player?.getDuration)return;const duration=player.getDuration()||0,currentTime=player.getCurrentTime()||0;$("#progress").max=duration||100;$("#progress").value=currentTime;$("#progress").style.setProperty("--progress",duration?((currentTime/duration)*100)+"%":"0%");$("#currentTime").textContent=formatTime(currentTime);$("#duration").textContent=formatTime(duration);updateScreenProgress()},100)}
 function stopProgress(){clearInterval(progressTimer);progressTimer=null}
 
 function playTrack(t,index=-1){
   if(!t?.id)return;
   current=t;
   if(index>=0)queueIndex=index;else{const existing=queue.findIndex(x=>x.id===t.id);if(existing>=0)queueIndex=existing;else{queue=[t];queueIndex=0}}
-  $("#nowTitle").textContent=t.title;$("#nowArtist").textContent=t.artist;$("#nowArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#nowArt").textContent="";$("#nowArt").classList.add("has-image");$("#youtubeLabel").textContent=t.title;document.title=t.title+" — VYRA";addHistory(t);updateLikeButton();
+  $("#nowTitle").textContent=t.title;$("#nowArtist").textContent=t.artist;openTrackScreen(t);$("#nowArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#nowArt").textContent="";$("#nowArt").classList.add("has-image");$("#youtubeLabel").textContent=t.title;document.title=t.title+" — VYRA";addHistory(t);updateLikeButton();
   if(!playerReady){toast("Player hazırlanıyor…");return}
   player.loadVideoById(t.id);player.setVolume(Number($("#volume").value));player.playVideo()
 }
@@ -80,6 +85,10 @@ $("#progress").oninput=e=>{const v=Number(e.target.value)||0;const max=Number(e.
 $("#newPlaylist").onclick=()=>{const name=prompt("Çalma listesine isim ver:");if(!name?.trim())return;lists.push(name.trim());saveState();render();toast("Liste oluşturuldu")};
 $("#closeYoutube").onclick=()=>$("#youtubeDock").classList.remove("open");$("#mobileMenu").onclick=()=>$(".sidebar").classList.toggle("open");
 $("#profileBtn").onclick=()=>{$("#profilePanel").classList.add("open");updateProfileStats()};
+$("#trackScreenClose").onclick=closeTrackScreen;$("#trackScreenPlay").onclick=()=>{if(current)togglePlayback()};$("#screenPlaySmall").onclick=()=>{if(current)togglePlayback()};$("#screenPrev").onclick=prevTrack;$("#screenNext").onclick=nextTrack);
+$("#trackScreenLike").onclick=()=>{if(current){toggleFav(current);openTrackScreen(current)}};
+$("#trackScreenAdd").onclick=()=>{if(!current)return;const name=prompt("Çalma listesi adı:");if(!name?.trim())return;const n=name.trim();if(!lists.includes(n))lists.push(n);saveState();render();toast("Listeye hazırlandı • "+n)};
+$("#screenProgress").oninput=e=>{const v=Number(e.target.value)||0,max=Number(e.target.max)||100;e.target.style.setProperty("--progress",((v/max)*100)+"%");if(playerReady)player.seekTo(v,true)};
 $("#profileClose").onclick=()=>$("#profilePanel").classList.remove("open");
 $("#profileLibrary").onclick=()=>{$("#profilePanel").classList.remove("open");page("library")};
 $("#trackClose").onclick=closeTrackModal;
@@ -89,5 +98,5 @@ setTimeout(()=>$("#splash")?.classList.add("hide"),1400);
 $$(".nav,.mobile-nav button").forEach(b=>b.onclick=()=>page(b.dataset.page));$$("[data-page-target]").forEach(b=>b.onclick=()=>page(b.dataset.pageTarget));
 $$(".chips button").forEach(b=>b.onclick=()=>{$("#bigSearch").value=b.dataset.query;doSearch(b.dataset.query)});
 $$(".library-tabs button").forEach(b=>b.onclick=()=>{$$(".library-tabs button").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");renderLibrary(b.dataset.libraryTab)});
-document.addEventListener("click",e=>{const playId=e.target.closest("[data-play-id]")?.dataset.playId,likeId=e.target.closest("[data-like-id]")?.dataset.likeId,cardEl=e.target.closest(".card");if(playId){const t=[...queue,...favs,...history].find(x=>x.id===playId);if(t)playTrack(t);return}if(likeId){const t=[...queue,...favs,...history].find(x=>x.id===likeId);if(t)toggleFav(t);return}if(cardEl?.dataset.id){const t=queue.find(x=>x.id===cardEl.dataset.id);if(t)playTrack(t)}});
+document.addEventListener("click",e=>{const playId=e.target.closest("[data-play-id]")?.dataset.playId,likeId=e.target.closest("[data-like-id]")?.dataset.likeId,detailId=e.target.closest("[data-detail-id]")?.dataset.detailId,cardEl=e.target.closest(".card");if(detailId){const t=findTrack(detailId);if(t)openTrackScreen(t);return}if(playId){const t=[...queue,...favs,...history].find(x=>x.id===playId);if(t)playTrack(t);return}if(likeId){const t=[...queue,...favs,...history].find(x=>x.id===likeId);if(t)toggleFav(t);return}if(cardEl?.dataset.id){const t=queue.find(x=>x.id===cardEl.dataset.id);if(t)openTrackScreen(t)}});
 render();updateProfileStats();loadFeatured();
