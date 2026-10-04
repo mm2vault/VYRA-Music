@@ -779,7 +779,7 @@ function closeEntity() {
 }
 
 const OFFLINE_DB="vyraOffline";const OFFLINE_STORE="tracks";
-function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" in window))return reject(new Error("Çevrimdışı depolama desteklenmiyor."));const request=indexedDB.open(OFFLINE_DB,1);request.onupgradeneeded=()=>request.result.createObjectStore(OFFLINE_STORE,{keyPath:"id"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error("Çevrimdışı depolama açılamadı."));});}
+function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" in window))return reject(new Error("Çevrimdışı depolama desteklenmiyor."));const request=indexedDB.open(OFFLINE_DB,2);request.onupgradeneeded=()=>request.result.createObjectStore(OFFLINE_STORE,{keyPath:"id"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error("Çevrimdışı depolama açılamadı."));});}
 async function saveOfflineTrack(track){const t=normalizeTrack(track);if(!t)return;try{const db=await openOfflineDB();await new Promise((resolve,reject)=>{const tx=db.transaction(OFFLINE_STORE,"readwrite");tx.objectStore(OFFLINE_STORE).put({...t,savedAt:Date.now(),offlineAudio:false});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});toast("✓ Koleksiyona kaydedildi • YouTube sesi indirilemiyor");}catch(error){console.warn("VYRA offline storage:",error);toast("Çevrimdışı kayıt kullanılamıyor.");}}
 async function isOfflineSaved(id){try{const db=await openOfflineDB();return await new Promise(resolve=>{const tx=db.transaction(OFFLINE_STORE,"readonly");const req=tx.objectStore(OFFLINE_STORE).get(id);req.onsuccess=()=>resolve(Boolean(req.result));req.onerror=()=>resolve(false);});}catch{return false;}}
 function updateOfflineButton(track){if(!track)return;isOfflineSaved(track.id).then(saved=>["#downloadBtn","#trackScreenDownload"].forEach(selector=>{const button=$(selector);if(button){button.textContent=saved?"✓":"⇩";button.title=saved?"Çevrimdışı koleksiyonda":"Çevrimdışı kaydet";button.classList.toggle("saved",saved);}}));}
@@ -826,6 +826,7 @@ function setupOfflineMode(){
 }
 function markOnline(){ updateOfflineStatus(false); }
 \nfunction playTrack(track, index = -1) {
+  if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.pause(); localMedia=null; }
   const t = normalizeTrack(track);
   if (!t) return;
 
@@ -1028,15 +1029,12 @@ function bindEvents() {
   });
 
   const downloadCurrent = () => {
-    if (!current) {
-      toast("Önce bir şarkı seç.");
-      return;
-    }
-    saveOfflineTrack(current);
+    $("#offlineFileInput")?.click();
+    if (!$("#offlineFileInput")) toast("Offline dosya seçici hazır değil.");
   };
   $("#downloadBtn")?.addEventListener("click", downloadCurrent);
   $("#trackScreenDownload")?.addEventListener("click", () => {
-    if (screenTrack) saveOfflineTrack(screenTrack);
+    $("#offlineFileInput")?.click();
   });
 
   $("#progress")?.addEventListener("input", event => {
