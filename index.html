@@ -69,7 +69,37 @@
 
   <div class="mobile-nav"><button data-page="home">⌂<small>Ana</small></button><button data-page="discover">✦<small>Keşfet</small></button><button data-page="search">⌕<small>Ara</small></button><button data-page="library">♫<small>Kitaplık</small></button></div>
 </div>
-<div id="toast"></div>
+
+
+  <div id="trackScreen" class="track-screen" aria-hidden="true">
+    <div id="trackBackdrop" class="track-backdrop"></div>
+    <button id="trackScreenClose" class="track-screen-close" aria-label="Kapat">×</button>
+    <div class="track-screen-inner">
+      <div class="track-screen-art-wrap"><div id="trackScreenArt" class="track-screen-art"></div><div class="track-screen-shine"></div></div>
+      <div class="track-screen-info">
+        <span class="eyebrow">ŞİMDİ DİNLİYORSUN</span>
+        <h1 id="trackScreenTitle">VYRA</h1>
+        <p id="trackScreenArtist">Müzik</p>
+        <div class="track-screen-meta"><span>● YouTube</span><span id="trackScreenYear">VYRA MUSIC</span></div>
+        <div class="track-screen-actions">
+          <button id="trackScreenPlay" class="track-main-play">▶</button>
+          <button id="trackScreenLike" class="track-round">♡</button>
+          <button id="trackScreenAdd" class="track-round">＋</button>
+        </div>
+        <div class="track-screen-progress"><span id="screenCurrent">0:00</span><input id="screenProgress" type="range" min="0" max="100" value="0"><span id="screenDuration">0:00</span></div>
+        <div class="track-screen-controls"><button id="screenPrev">↶</button><button id="screenPlaySmall">▶</button><button id="screenNext">↷</button></div>
+        <div class="track-screen-note"><span>♫</span><div><b>VYRA Player</b><small>Gerçek zamanlı YouTube oynatımı • VYRA arayüzü</small></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="profilePanel" class="profile-panel">
+    <button id="profileClose" class="profile-close">×</button>
+    <div class="profile-cover"><div class="profile-big-avatar">M</div></div>
+    <div class="profile-body"><span class="eyebrow">VYRA PROFILE</span><h2>Misafir</h2><p>VYRA müzik evrenindeki koleksiyonun.</p><div class="profile-stats"><div><b id="favCount">0</b><small>Favori</small></div><div><b id="historyCount">0</b><small>Dinleme</small></div><div><b id="playlistCount">0</b><small>Liste</small></div></div><button id="profileLibrary" class="primary profile-action">Kitaplığımı aç →</button></div>
+  </div>
+
+  <div id="toast"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="app.js"></script>
 </body>
