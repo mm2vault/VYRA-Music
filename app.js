@@ -798,7 +798,9 @@ async function verifyConnection(){
 function updateOfflineStatus(forceOffline=null){
   const bar=$("#offlineBar");
   if(!bar)return;
-  const offline=forceOffline===null ? navigator.onLine===false : Boolean(forceOffline);
+  // The browser's online flag can be stale; only show this bar when
+  // the browser explicitly reports offline or we explicitly request it.
+  const offline=forceOffline===true || (forceOffline===null && navigator.onLine===false);
   bar.hidden=!offline;
   document.body.classList.toggle("is-offline",offline);
 }
@@ -1246,7 +1248,7 @@ let deferredInstallPrompt = null;
 
 function setupPWA() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("./sw.js").catch(error => console.warn("VYRA SW:", error));
+    navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(error => console.warn("VYRA SW:", error));
   }
 
   const installBtn = $("#installBtn");
