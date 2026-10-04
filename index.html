@@ -79,7 +79,7 @@
   </div>
 
   <div class="player">
-    <div class="now"><div id="nowArt" class="now-art">V</div><div class="now-copy"><b id="nowTitle">VYRA'ya hoş geldin</b><small id="nowArtist">YouTube'dan bir şarkı seç</small></div><div class="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><button id="likeBtn" class="icon">♡</button></div><div class="controls"><div class="buttons"><button id="prevBtn">↶</button><button id="playBtn" class="play">▶</button><button id="nextBtn">↷</button></div><div class="progress"><span id="currentTime">0:00</span><input id="progress" type="range" min="0" max="100" value="0"><span id="duration">0:00</span></div></div>
+    <div class="now"><div id="nowArt" class="now-art">V</div><div class="now-copy"><b id="nowTitle">VYRA'ya hoş geldin</b><small id="nowArtist">YouTube'dan bir şarkı seç</small></div><div class="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><button id="downloadBtn" class="icon" title="Çevrimdışı kaydet">⇩</button><button id="likeBtn" class="icon">♡</button></div><div class="controls"><div class="buttons"><button id="prevBtn">↶</button><button id="playBtn" class="play">▶</button><button id="nextBtn">↷</button></div><div class="progress"><span id="currentTime">0:00</span><input id="progress" type="range" min="0" max="100" value="0"><span id="duration">0:00</span></div></div>
     <div class="volume"><span>🔊</span><input id="volume" type="range" min="0" max="100" value="70"></div>
   </div>
 
@@ -100,7 +100,7 @@
         <div class="track-screen-actions">
           <button id="trackScreenPlay" class="track-main-play">▶</button>
           <button id="trackScreenLike" class="track-round">♡</button>
-          <button id="trackScreenAdd" class="track-round">＋</button>
+          <button id="trackScreenAdd" class="track-round">＋</button><button id="trackScreenDownload" class="track-round" title="Çevrimdışı kaydet">⇩</button>
         </div>
         <div class="track-screen-progress"><span id="screenCurrent">0:00</span><input id="screenProgress" type="range" min="0" max="100" value="0"><span id="screenDuration">0:00</span></div>
         <div class="track-screen-controls"><button id="screenPrev">↶</button><button id="screenPlaySmall">▶</button><button id="screenNext">↷</button></div>
@@ -150,7 +150,7 @@
       <div id="playlistViewTracks" class="playlist-view-tracks"></div>
     </div>
   </div>
-  <div id="toast"></div>
+  <div id="toast"></div><div id="offlineBar" class="offline-bar" aria-live="polite" hidden><span>●</span><b>Çevrimdışı mod</b><small>İnternet bağlantısı yok</small></div>
 <script>
 (()=>{
   const hideSplash=()=>document.getElementById("splash")?.classList.add("hide");
