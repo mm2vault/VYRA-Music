@@ -137,7 +137,14 @@
     </div>
   </div>
   <div id="toast"></div>
-<script src="https://www.youtube.com/iframe_api"></script>
 <script src="app.js"></script>
+<script>
+(()=>{
+  const hideSplash=()=>document.getElementById("splash")?.classList.add("hide");
+  setTimeout(hideSplash,1200);
+  window.addEventListener("load",()=>setTimeout(hideSplash,120));
+})();
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
 </body>
 </html>
