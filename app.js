@@ -177,7 +177,7 @@ function renderLibrary(tab = "favorites") {
     return;
   }
 
-  if (tab === "history") {
+  if (tab === "offline") { renderOfflineLibrary(); return; }\n\n  if (tab === "history") {
     box.innerHTML = history.length
       ? history.map(renderResult).join("")
       : '<div class="empty-state"><div>◷</div><b>Dinleme geçmişin boş</b><p>Dinlediğin şarkılar burada otomatik görünecek.</p></div>';
@@ -1291,9 +1291,121 @@ function setupPWA() {
   });
 }
 
+
+const LOCAL_OFFLINE_STORE="media";
+let localMedia=null;
+let localObjectUrl=null;
+
+function openLocalDB(){
+  return new Promise((resolve,reject)=>{
+    if(!("indexedDB" in window)) return reject(new Error("IndexedDB desteklenmiyor."));
+    const request=indexedDB.open(OFFLINE_DB,2);
+    request.onupgradeneeded=()=>{
+      const db=request.result;
+      if(!db.objectStoreNames.contains(OFFLINE_STORE)) db.createObjectStore(OFFLINE_STORE,{keyPath:"id"});
+      if(!db.objectStoreNames.contains(LOCAL_OFFLINE_STORE)) db.createObjectStore(LOCAL_OFFLINE_STORE,{keyPath:"id"});
+    };
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error||new Error("Offline depolama açılamadı."));
+  });
+}
+async function saveLocalMedia(file){
+  if(!file)return;
+  if(!file.type.startsWith("audio/")&&!file.type.startsWith("video/")){toast("Sadece ses veya video dosyası seç.");return;}
+  if(file.size>500*1024*1024){toast("Dosya 500 MB'dan küçük olmalı.");return;}
+  const id="local_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+  const title=file.name.replace(/\.[^.]+$/,"")||"VYRA Offline";
+  const item={id,title,artist:"Cihazındaki müzik",thumbnail:"",mime:file.type,size:file.size,blob:file,savedAt:Date.now(),local:true};
+  try{
+    const db=await openLocalDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(LOCAL_OFFLINE_STORE,"readwrite");
+      tx.objectStore(LOCAL_OFFLINE_STORE).put(item);
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+    toast("✓ VYRA Offline'a kaydedildi");
+    renderOfflineLibrary();
+  }catch(e){console.error(e);toast("Dosya kaydedilemedi.");}
+}
+async function getLocalMedia(id){
+  try{
+    const db=await openLocalDB();
+    return await new Promise((resolve,reject)=>{
+      const req=db.transaction(LOCAL_OFFLINE_STORE,"readonly").objectStore(LOCAL_OFFLINE_STORE).get(id);
+      req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
+    });
+  }catch{return null;}
+}
+async function listLocalMedia(){
+  try{
+    const db=await openLocalDB();
+    return await new Promise((resolve,reject)=>{
+      const req=db.transaction(LOCAL_OFFLINE_STORE,"readonly").objectStore(LOCAL_OFFLINE_STORE).getAll();
+      req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error);
+    });
+  }catch{return [];}
+}
+async function deleteLocalMedia(id){
+  try{
+    const db=await openLocalDB();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(LOCAL_OFFLINE_STORE,"readwrite");
+      tx.objectStore(LOCAL_OFFLINE_STORE).delete(id);
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+    if(localMedia?.id===id){localMedia=null;if(localObjectUrl){URL.revokeObjectURL(localObjectUrl);localObjectUrl=null;}}
+    renderOfflineLibrary();toast("Offline dosyası silindi");
+  }catch{toast("Dosya silinemedi.");}
+}
+function localTrack(item){return {id:item.id,title:item.title,artist:item.artist,thumbnail:item.thumbnail||"",publishedAt:"",local:true,mime:item.mime,size:item.size};}
+async function renderOfflineLibrary(){
+  const box=$("#libraryContent"); if(!box)return;
+  const items=await listLocalMedia();
+  const size=(items.reduce((n,x)=>n+(x.size||0),0)/1048576).toFixed(1);
+  box.innerHTML='<div class="offline-library-head"><div><b>VYRA Offline</b><small>'+items.length+' dosya • '+size+' MB</small></div><button class="primary" id="offlineAddBtn">＋ Dosya ekle</button></div>'+
+    (items.length?items.sort((a,b)=>b.savedAt-a.savedAt).map(item=>'<div class="result offline-result"><button class="result-main" data-offline-play="'+escapeHtml(item.id)+'"><div class="offline-file-icon">'+(item.mime?.startsWith("video/")?"▶":"♫")+'</div><span class="meta"><b>'+escapeHtml(item.title)+'</b><small>'+escapeHtml(item.artist)+' • '+((item.size||0)/1048576).toFixed(1)+' MB</small></span></button><button class="result-like offline-delete" data-offline-delete="'+escapeHtml(item.id)+'">×</button></div>').join(""):'<div class="empty-state offline-empty"><div>📥</div><b>Offline koleksiyonun boş</b><p>Kendi MP3, M4A, WAV veya video dosyanı ekle. İnternet olmadan VYRA içinden çal.</p><button class="primary" id="offlineEmptyAdd">＋ İlk dosyanı ekle</button></div>');
+  $("#offlineAddBtn")?.addEventListener("click",()=>$("#offlineFileInput")?.click());
+  $("#offlineEmptyAdd")?.addEventListener("click",()=>$("#offlineFileInput")?.click());
+}
+async function playLocalMediaById(id){
+  const item=await getLocalMedia(id); if(!item)return;
+  if(localObjectUrl)URL.revokeObjectURL(localObjectUrl);
+  localObjectUrl=URL.createObjectURL(item.blob); localMedia=item;
+  if(!window.__vyraLocalPlayer){
+    const media=document.createElement("video");
+    media.id="vyraLocalPlayer";media.style.display="none";media.playsInline=true;
+    media.addEventListener("ended",()=>{playing=false;$(".player")?.classList.remove("is-playing");});
+    media.addEventListener("timeupdate",()=>{
+      const d=media.duration||0, t=media.currentTime||0;
+      ["#progress","#screenProgress"].forEach(s=>{const el=$(s);if(el){el.max=d||100;el.value=t;}});
+      if($("#currentTime"))$("#currentTime").textContent=formatTime(t);
+      if($("#screenCurrent"))$("#screenCurrent").textContent=formatTime(t);
+      if($("#duration"))$("#duration").textContent=formatTime(d);
+      if($("#screenDuration"))$("#screenDuration").textContent=formatTime(d);
+    });
+    document.body.appendChild(media);window.__vyraLocalPlayer=media;
+  }
+  const media=window.__vyraLocalPlayer;media.src=localObjectUrl;media.volume=Number($("#volume")?.value||70)/100;
+  current=localTrack(item);screenTrack=current;playing=true;
+  if($("#nowTitle"))$("#nowTitle").textContent=current.title;if($("#nowArtist"))$("#nowArtist").textContent=current.artist;
+  if($("#nowArt")){$("#nowArt").style.backgroundImage="";$("#nowArt").textContent="♫";}
+  updateLikeButtons(current);openTrackScreen(current);$(".player")?.classList.add("is-playing");
+  try{await media.play();toast("▶ Offline oynatılıyor");}catch{toast("Oynatmak için tekrar dokun.");}
+}
+function setupLocalOffline(){
+  $("#offlineFileInput")?.addEventListener("change",e=>{
+    const files=[...e.target.files];files.forEach(saveLocalMedia);e.target.value="";
+  });
+  document.addEventListener("click",e=>{
+    const play=e.target.closest("[data-offline-play]");if(play){playLocalMediaById(play.dataset.offlinePlay);return;}
+    const del=e.target.closest("[data-offline-delete]");if(del){deleteLocalMedia(del.dataset.offlineDelete);return;}
+  });
+}
+
 function boot() {
   setupPWA();
   setupOfflineMode();
+  setupLocalOffline();
   if (window.lucide) window.lucide.createIcons();
   loadState();
   bindEvents();
