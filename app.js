@@ -177,7 +177,9 @@ function renderLibrary(tab = "favorites") {
     return;
   }
 
-  if (tab === "offline") { renderOfflineLibrary(); return; }\n\n  if (tab === "history") {
+  if (tab === "offline") { renderOfflineLibrary(); return; }
+
+  if (tab === "history") {
     box.innerHTML = history.length
       ? history.map(renderResult).join("")
       : '<div class="empty-state"><div>◷</div><b>Dinleme geçmişin boş</b><p>Dinlediğin şarkılar burada otomatik görünecek.</p></div>';
@@ -779,8 +781,8 @@ function closeEntity() {
 }
 
 const OFFLINE_DB="vyraOffline";const OFFLINE_STORE="tracks";
-function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" in window))return reject(new Error("Çevrimdışı depolama desteklenmiyor."));const request=indexedDB.open(OFFLINE_DB,2);request.onupgradeneeded=()=>request.result.createObjectStore(OFFLINE_STORE,{keyPath:"id"});request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error("Çevrimdışı depolama açılamadı."));});}
-async function saveOfflineTrack(track){const t=normalizeTrack(track);if(!t)return;try{const db=await openOfflineDB();await new Promise((resolve,reject)=>{const tx=db.transaction(OFFLINE_STORE,"readwrite");tx.objectStore(OFFLINE_STORE).put({...t,savedAt:Date.now(),offlineAudio:false});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});toast("✓ Koleksiyona kaydedildi • YouTube sesi indirilemiyor");}catch(error){console.warn("VYRA offline storage:",error);toast("Çevrimdışı kayıt kullanılamıyor.");}}
+function openOfflineDB(){return new Promise((resolve,reject)=>{if(!("indexedDB" in window))return reject(new Error("Çevrimdışı depolama desteklenmiyor."));const request=indexedDB.open(OFFLINE_DB,3);request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(OFFLINE_STORE))db.createObjectStore(OFFLINE_STORE,{keyPath:"id"});if(!db.objectStoreNames.contains(LOCAL_OFFLINE_STORE))db.createObjectStore(LOCAL_OFFLINE_STORE,{keyPath:"id"});};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error("Çevrimdışı depolama açılamadı."));});}
+async function saveOfflineTrack(track){const t=normalizeTrack(track);if(!t)return;try{const db=await openOfflineDB();await new Promise((resolve,reject)=>{const tx=db.transaction(OFFLINE_STORE,"readwrite");tx.objectStore(OFFLINE_STORE).put({...t,savedAt:Date.now(),offlineAudio:false});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});renderOfflineLibrary();toast("✓ Koleksiyona kaydedildi • YouTube sesi indirilemiyor");}catch(error){console.warn("VYRA offline storage:",error);toast("Çevrimdışı kayıt kullanılamıyor.");}}
 async function isOfflineSaved(id){try{const db=await openOfflineDB();return await new Promise(resolve=>{const tx=db.transaction(OFFLINE_STORE,"readonly");const req=tx.objectStore(OFFLINE_STORE).get(id);req.onsuccess=()=>resolve(Boolean(req.result));req.onerror=()=>resolve(false);});}catch{return false;}}
 function updateOfflineButton(track){if(!track)return;isOfflineSaved(track.id).then(saved=>["#downloadBtn","#trackScreenDownload"].forEach(selector=>{const button=$(selector);if(button){button.textContent=saved?"✓":"⇩";button.title=saved?"Çevrimdışı koleksiyonda":"Çevrimdışı kaydet";button.classList.toggle("saved",saved);}}));}
 let vyraOnlineCheck=null;
@@ -813,7 +815,8 @@ function setupOfflineMode(){
   updateOfflineButton(current);
 }
 function markOnline(){ updateOfflineStatus(false); }
-\nfunction playTrack(track, index = -1) {
+
+function playTrack(track, index = -1) {
   if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.pause(); localMedia=null; }
   const t = normalizeTrack(track);
   if (!t) return;
@@ -1017,12 +1020,12 @@ function bindEvents() {
   });
 
   const downloadCurrent = () => {
-    $("#offlineFileInput")?.click();
-    if (!$("#offlineFileInput")) toast("Offline dosya seçici hazır değil.");
+    if (current) saveOfflineTrack(current);
+    else toast("Önce bir şarkı seç.");
   };
   $("#downloadBtn")?.addEventListener("click", downloadCurrent);
   $("#trackScreenDownload")?.addEventListener("click", () => {
-    $("#offlineFileInput")?.click();
+    if (screenTrack) saveOfflineTrack(screenTrack);
   });
 
   $("#progress")?.addEventListener("input", event => {
