@@ -21,7 +21,10 @@ function page(id){$$(".page").forEach(x=>x.classList.remove("active-page"));$("#
 function saveState(){localStorage.setItem("vyraFavs",JSON.stringify(favs));localStorage.setItem("vyraHistory",JSON.stringify(history));localStorage.setItem("vyraLists",JSON.stringify(lists))}
 function addHistory(t){history=[t,...history.filter(x=>x.id!==t.id)].slice(0,30);saveState()}
 function toggleFav(t){const i=favs.findIndex(x=>x.id===t.id);if(i>=0){favs.splice(i,1);toast("Favorilerden çıkarıldı")}else{favs.unshift(t);toast("♥ Favorilere eklendi")}saveState();updateLikeButton();renderLibrary("favorites")}
-function updateLikeButton(){if(!current)return;$("#likeBtn").textContent=favs.some(x=>x.id===current.id)?"♥":"♡"}
+function updateLikeButton(){if(!current)return;$("#likeBtn").textContent=favs.some(x=>x.id===current.id)?"♥":"♡";updateProfileStats()}
+function updateProfileStats(){$("#favCount")?.replaceChildren(document.createTextNode(favs.length));$("#historyCount")?.replaceChildren(document.createTextNode(history.length));$("#playlistCount")?.replaceChildren(document.createTextNode(lists.length))}
+function openTrackModal(t=current){if(!t?.id)return;$("#trackModalArt").style.backgroundImage=`url("${t.thumbnail}")`;$("#trackModalTitle").textContent=t.title;$("#trackModalArtist").textContent=t.artist;$("#trackModal").classList.add("open");$("#trackModalLike").textContent=favs.some(x=>x.id===t.id)?"♥ Favorilerde":"♡ Favoriye ekle";$("#trackModalPlay").onclick=()=>{playTrack(t);$("#trackModal").classList.remove("open")};$("#trackModalLike").onclick=()=>{toggleFav(t);openTrackModal(t)}}
+function closeTrackModal(){$("#trackModal")?.classList.remove("open")}
 
 function onYouTubeIframeAPIReady(){
   player=new YT.Player("youtubePlayer",{width:"100%",height:"100%",videoId:"",playerVars:{autoplay:0,controls:1,rel:0,modestbranding:1,playsinline:1},events:{
@@ -76,8 +79,15 @@ $("#playBtn").onclick=togglePlayback;$("#nextBtn").onclick=nextTrack;$("#prevBtn
 $("#progress").oninput=e=>{const v=Number(e.target.value)||0;const max=Number(e.target.max)||100;e.target.style.setProperty("--progress",((v/max)*100)+"%");if(playerReady)player.seekTo(v,true)};$("#volume").oninput=e=>{if(playerReady)player.setVolume(Number(e.target.value))};
 $("#newPlaylist").onclick=()=>{const name=prompt("Çalma listesine isim ver:");if(!name?.trim())return;lists.push(name.trim());saveState();render();toast("Liste oluşturuldu")};
 $("#closeYoutube").onclick=()=>$("#youtubeDock").classList.remove("open");$("#mobileMenu").onclick=()=>$(".sidebar").classList.toggle("open");
+$("#profileBtn").onclick=()=>{$("#profilePanel").classList.add("open");updateProfileStats()};
+$("#profileClose").onclick=()=>$("#profilePanel").classList.remove("open");
+$("#profileLibrary").onclick=()=>{$("#profilePanel").classList.remove("open");page("library")};
+$("#trackClose").onclick=closeTrackModal;
+$("#trackModal").addEventListener("click",e=>{if(e.target.id==="trackModal")closeTrackModal()});
+$("#nowArt").onclick=()=>openTrackModal(current);
+setTimeout(()=>$("#splash")?.classList.add("hide"),1400);
 $$(".nav,.mobile-nav button").forEach(b=>b.onclick=()=>page(b.dataset.page));$$("[data-page-target]").forEach(b=>b.onclick=()=>page(b.dataset.pageTarget));
 $$(".chips button").forEach(b=>b.onclick=()=>{$("#bigSearch").value=b.dataset.query;doSearch(b.dataset.query)});
 $$(".library-tabs button").forEach(b=>b.onclick=()=>{$$(".library-tabs button").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");renderLibrary(b.dataset.libraryTab)});
 document.addEventListener("click",e=>{const playId=e.target.closest("[data-play-id]")?.dataset.playId,likeId=e.target.closest("[data-like-id]")?.dataset.likeId,cardEl=e.target.closest(".card");if(playId){const t=[...queue,...favs,...history].find(x=>x.id===playId);if(t)playTrack(t);return}if(likeId){const t=[...queue,...favs,...history].find(x=>x.id===likeId);if(t)toggleFav(t);return}if(cardEl?.dataset.id){const t=queue.find(x=>x.id===cardEl.dataset.id);if(t)playTrack(t)}});
-render();loadFeatured();
+render();updateProfileStats();loadFeatured();
