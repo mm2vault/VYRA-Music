@@ -385,137 +385,6 @@ main{padding:0 34px 150px;max-width:1500px;margin:auto}header{height:82px;positi
 @media(max-width:550px){.offline-library-head .primary{padding:9px 11px;font-size:10px}.offline-file-icon{width:46px;height:46px}.offline-result .meta b{font-size:11px}.offline-result .meta small{font-size:9px}}
 
 
-/* VYRA 3.0 — reference-inspired premium streaming layout */
-:root{
-  --bg:#090913;--panel:#151423;--panel2:#1b192a;--line:rgba(195,171,255,.13);
-  --muted:#aaa7bd;--purple:#ad72ff;--purple2:#d29aff;
-}
-html{background:#090913;scroll-behavior:smooth}
-body{background:radial-gradient(ellipse 65% 35% at 55% -8%,rgba(103,45,188,.23),transparent),#090913}
-.app{padding-bottom:0;min-height:100vh}
-.sidebar{
-  width:224px;padding:29px 15px;background:rgba(15,14,27,.94);
-  border-right:1px solid var(--line);backdrop-filter:blur(18px)
-}
-.brand{font-size:17px;letter-spacing:.14em;padding:2px 11px 38px}
-.brand .logo{width:32px;height:32px;border-radius:10px}
-.brand .logo img{width:24px;height:24px}
-.nav{padding:13px 14px;border-radius:13px;gap:14px;color:#a9a5ba}
-.nav:hover,.nav.active{color:#fff;background:linear-gradient(90deg,rgba(147,73,240,.29),rgba(147,73,240,.07))}
-.nav.active{box-shadow:inset 3px 0 #b47aff,0 0 24px rgba(136,66,221,.1)}
-.side-title{margin:30px 12px 10px;color:#756e88;font-size:10px}
-.playlist-btn{background:#12111b;border:1px dashed #393348;border-radius:11px}
-main{margin-left:224px;width:calc(100% - 224px);padding:0 29px 35px}
-header{height:76px;background:linear-gradient(#090913f5,#09091300)}
-.search{max-width:430px;background:#1c1b2b;border:1px solid #ffffff16;border-radius:12px}
-.search input{height:42px;font-size:13px}
-.profile{border:2px solid #ad72ff;width:36px;height:36px}
-.hero{
-  min-height:272px;height:272px;border-radius:22px;padding:35px 39px;
-  background:linear-gradient(90deg,#191027,#24133fe8 42%,#22124350),#241443;
-  border:1px solid #ae80f04d;box-shadow:0 18px 60px #0005
-}
-.hero h1{font-size:clamp(42px,4vw,58px);margin:10px 0}
-.hero p{font-size:13px}
-.hero-art{right:7%;width:300px;height:300px}
-.disc{width:230px;height:230px}
-.section-head{margin:29px 0 15px}
-.section-head h2{font-size:19px}
-.section-head p{font-size:11px}
-.cards{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-.card{background:#191827;border:1px solid #ffffff0f;border-radius:15px;padding:9px}
-.cover{height:auto;aspect-ratio:1;border-radius:10px;margin-bottom:11px}
-.card b{font-size:12px}.card small{font-size:10px}
-.chips button{background:#15121f;border:1px solid #292337;border-radius:99px;padding:10px 15px}
-.page-title{padding-top:12px}.page-title h1{font-size:38px}
-.search-filters button,.library-tabs button{
-  border-radius:999px;background:#15121f;color:#aaa5b7;border:1px solid #292337;
-  padding:9px 14px
-}
-.search-filters button.selected,.library-tabs button.selected{background:#fff;color:#15121f}
-.results{background:transparent}
-.result{border-bottom:1px solid rgba(255,255,255,.055)}
-.player{
-  position:fixed!important;left:auto!important;right:0!important;top:0!important;bottom:0!important;
-  width:310px!important;height:100vh!important;padding:30px 19px 105px!important;
-  display:flex!important;flex-direction:column!important;justify-content:flex-start!important;
-  gap:0!important;background:rgba(17,16,30,.96)!important;border-left:1px solid var(--line)!important;
-  z-index:40!important;backdrop-filter:blur(20px)
-}
-.player .now{
-  display:flex!important;flex-direction:column!important;align-items:stretch!important;
-  gap:0!important;width:100%!important;position:relative
-}
-.player .now-art{
-  width:100%!important;height:auto!important;aspect-ratio:1!important;border-radius:16px!important;
-  margin:0 0 22px!important;background:linear-gradient(135deg,#40205f,#d978ff)!important;
-  box-shadow:0 16px 50px #0009,0 0 35px #8e49de35!important
-}
-.player .now-copy{min-width:0!important;display:block!important}
-.player .now-copy b{font-size:21px!important;display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
-.player .now-copy small{font-size:12px!important;margin-top:4px!important}
-.player .equalizer{position:absolute!important;right:42px!important;bottom:3px!important}
-.player #downloadBtn{position:absolute!important;right:4px!important;bottom:0!important}
-.player #likeBtn{position:absolute!important;right:0!important;top:calc(100% + 14px)!important}
-.player .controls{
-  display:flex!important;flex-direction:column!important;width:100%!important;gap:0!important;margin-top:55px!important
-}
-.player .buttons{width:100%!important;justify-content:space-between!important;gap:0!important;height:50px!important}
-.player .buttons button{width:34px!important;height:34px!important;background:transparent!important}
-.player .buttons .play{width:49px!important;height:49px!important;background:#b879ff!important}
-.player .progress{width:100%!important;display:grid!important;grid-template-columns:32px minmax(0,1fr) 32px!important;gap:8px!important}
-.player .progress input{width:100%!important}
-.player .volume{
-  width:100%!important;margin-top:18px!important;padding-top:19px!important;
-  border-top:1px solid var(--line)!important;display:flex!important
-}
-.player-caption{display:block!important;margin-top:26px!important}
-.mini{display:none!important}
-.youtube-dock{display:none!important}
-.track-screen-inner{width:min(1120px,90vw)!important}
-@media(max-width:1250px) and (min-width:901px){
-  .sidebar{width:72px;padding:29px 10px}
-  .brand>span:last-child,.side-title,.playlist-btn,.playlist-list,.sidebar-bottom{display:none}
-  .brand{justify-content:center;padding:2px 0 38px}
-  main{margin-left:72px;width:calc(100% - 382px);padding:0 19px 35px}
-  .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .player{width:310px!important}
-}
-@media(max-width:900px){
-  main{margin-left:0;width:100%;padding:0 19px 100px}
-  .sidebar{display:none}
-  .player{
-    left:0!important;right:0!important;top:auto!important;bottom:58px!important;width:100%!important;
-    height:78px!important;padding:7px 11px!important;display:grid!important;
-    grid-template-columns:minmax(0,1fr) auto!important;flex-direction:row!important;
-    background:rgba(17,16,30,.96)!important
-  }
-  .player .now{display:grid!important;grid-template-columns:44px minmax(0,1fr) 28px!important;align-items:center!important;gap:8px!important}
-  .player .now-art{width:44px!important;height:44px!important;margin:0!important}
-  .player .now-copy b{font-size:11px!important}
-  .player .now-copy small{font-size:9px!important}
-  .player .equalizer{display:none!important}
-  .player #downloadBtn{position:static!important}
-  .player #likeBtn{display:none!important}
-  .player .controls{grid-column:2;margin:0!important;width:145px!important;min-width:145px!important}
-  .player .buttons{height:34px!important;justify-content:center!important;gap:3px!important}
-  .player .buttons button{width:28px!important;height:28px!important}
-  .player .buttons .play{width:34px!important;height:34px!important}
-  .player .progress{grid-template-columns:25px minmax(0,1fr) 25px!important;gap:4px!important;font-size:7px!important}
-  .player .volume{display:none!important}
-  .player-caption{display:none!important}
-}
-@media(max-width:640px){
-  main{padding:0 15px 150px}
-  header{height:67px}
-  .hero{min-height:270px;height:270px;padding:25px}
-  .hero-art{right:-22%;opacity:.72}
-  .hero h1{font-size:42px}
-  .cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:12px}
-  .card{min-width:142px;max-width:142px;scroll-snap-align:start}
-}
-
-
 /* VYRA mobile safety */
 html,body{overflow-x:hidden;}
 @media(max-width:640px){.search kbd{display:none}.search{min-width:0}.search input{min-width:0}.hero-copy{max-width:72%}.hero p{font-size:12px}.mobile-nav{padding-bottom:env(safe-area-inset-bottom)}.player{padding-bottom:calc(7px + env(safe-area-inset-bottom))!important}}
@@ -535,3 +404,11 @@ html,body{overflow-x:hidden;}
 /* Keep YouTube iframe rendered; display:none can interrupt mobile playback */
 .youtube-dock{display:block!important;position:fixed!important;left:-4px!important;bottom:-4px!important;width:2px!important;height:2px!important;opacity:.01!important;pointer-events:none!important;overflow:hidden!important;z-index:-1!important}
 .youtube-dock .youtube-head{display:none!important}.youtube-dock #youtubePlayer,.youtube-dock iframe{width:2px!important;height:2px!important}
+
+
+/* VYRA 2026-10-05 stability pass */
+html,body{min-height:100%;}
+.page{min-height:calc(100vh - 170px);}
+.player{z-index:50!important;}
+@media(min-width:901px){main{padding-bottom:130px!important;}.mobile-nav{display:none!important;}}
+@media(max-width:900px){main{padding-bottom:125px!important;}.mobile-nav{z-index:60!important;}.player{z-index:70!important;}}
