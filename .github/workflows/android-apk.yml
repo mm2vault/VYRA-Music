@@ -1,0 +1,73 @@
+name: VYRA Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Capacitor plugins
+        run: npx cap sync android
+
+      - name: Configure native audio service
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          perms = '''
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+          <uses-permission android:name="android.permission.WAKE_LOCK" />
+          '''
+          if 'FOREGROUND_SERVICE_MEDIA_PLAYBACK' not in s:
+              s = s.replace('<application', perms + '\n    <application', 1)
+          service = '''
+              <service
+                  android:name="us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService"
+                  android:description="@string/audio_player_service_description"
+                  android:foregroundServiceType="mediaPlayback"
+                  android:exported="true">
+                  <intent-filter>
+                      <action android:name="androidx.media3.session.MediaSessionService"/>
+                  </intent-filter>
+              </service>
+          '''
+          if 'us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService' not in s:
+              s = s.replace('</application>', service + '\n    </application>', 1)
+          p.write_text(s)
+
+          strings = Path("android/app/src/main/res/values/strings.xml")
+          ss = strings.read_text()
+          if 'audio_player_service_description' not in ss:
+              ss = ss.replace('</resources>', '    <string name="audio_player_service_description">VYRA müziği arka planda çalıyor.</string>\n</resources>')
+          strings.write_text(ss)
+
+      - name: Build debug APK
+        run: cd android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VYRA-Music-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
