@@ -1288,7 +1288,7 @@ let localObjectUrl=null;
 function openLocalDB(){
   return new Promise((resolve,reject)=>{
     if(!("indexedDB" in window)) return reject(new Error("IndexedDB desteklenmiyor."));
-    const request=indexedDB.open(OFFLINE_DB,2);
+    const request=indexedDB.open(OFFLINE_DB,3);
     request.onupgradeneeded=()=>{
       const db=request.result;
       if(!db.objectStoreNames.contains(OFFLINE_STORE)) db.createObjectStore(OFFLINE_STORE,{keyPath:"id"});
