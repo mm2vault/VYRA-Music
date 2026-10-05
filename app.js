@@ -464,6 +464,23 @@ function closeTrackScreen() {
 }
 
 function updateProgressUI() {
+  if (nativeAudioActive) return;
+  if (localMedia && window.__vyraLocalPlayer) {
+    const media=window.__vyraLocalPlayer;
+    const duration=media.duration||0, currentTime=media.currentTime||0;
+    const progress=$("#progress"), screenProgress=$("#screenProgress");
+    [progress,screenProgress].forEach(el=>{
+      if(!el)return;
+      el.max=duration||100;
+      el.value=Math.min(currentTime,duration||100);
+      el.style.setProperty("--progress",duration?(currentTime/duration*100)+"%":"0%");
+    });
+    if($("#currentTime"))$("#currentTime").textContent=formatTime(currentTime);
+    if($("#screenCurrent"))$("#screenCurrent").textContent=formatTime(currentTime);
+    if($("#duration"))$("#duration").textContent=formatTime(duration);
+    if($("#screenDuration"))$("#screenDuration").textContent=formatTime(duration);
+    return;
+  }
   if (!playerReady || !player) return;
   let duration = 0;
   let currentTime = 0;
@@ -518,6 +535,10 @@ function updateMediaSession(){
   } catch {}
 }
 function mediaPlay(){
+  if (nativeAudioActive) {
+    getNativeAudio()?.play({audioId:nativeAudioId}).then(()=>{playing=true;syncPlaybackButtons();}).catch(()=>{});
+    return;
+  }
   if (localMedia && window.__vyraLocalPlayer) {
     window.__vyraLocalPlayer.play().then(()=>{playing=true;syncPlaybackButtons();}).catch(()=>toast("Oynatmak için VYRA'ya geri dönüp tekrar dokun."));
     return;
@@ -526,6 +547,10 @@ function mediaPlay(){
   try { player?.playVideo(); } catch {}
 }
 function mediaPause(){
+  if (nativeAudioActive) {
+    getNativeAudio()?.pause({audioId:nativeAudioId}).then(()=>{playing=false;syncPlaybackButtons();}).catch(()=>{});
+    return;
+  }
   if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.pause(); playing=false; syncPlaybackButtons(); return; }
   try { player?.pauseVideo(); } catch {}
 }
@@ -873,6 +898,7 @@ function setupOfflineMode(){
 function markOnline(){ updateOfflineStatus(false); }
 
 function playTrack(track, index = -1) {
+  if (nativeAudioActive) stopNativeAudio();
   if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.pause(); localMedia=null; }
   const t = normalizeTrack(track);
   if (!t) return;
@@ -925,6 +951,14 @@ function playTrack(track, index = -1) {
 }
 
 function togglePlayback() {
+  if (nativeAudioActive) {
+    const audio=getNativeAudio();
+    if(!audio)return;
+    (playing ? audio.pause({audioId:nativeAudioId}) : audio.play({audioId:nativeAudioId}))
+      .then(()=>{playing=!playing;syncPlaybackButtons();})
+      .catch(()=>toast("Native oynatıcı hazır değil."));
+    return;
+  }
   if (localMedia && window.__vyraLocalPlayer) {
     const media = window.__vyraLocalPlayer;
     if (media.paused) media.play().then(()=>{playing=true;syncPlaybackButtons();}).catch(()=>toast("Oynatmak için tekrar dokun."));
@@ -965,6 +999,7 @@ function nextTrack() {
 }
 
 function previousTrack() {
+  if (nativeAudioActive) { getNativeAudio()?.seek({audioId:nativeAudioId,timeInSeconds:0}).catch(()=>{}); return; }
   if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.currentTime=0; return; }
   if (!queue.length) return;
 
@@ -1347,6 +1382,115 @@ function setupPWA() {
 
 
 const LOCAL_OFFLINE_STORE="media";
+
+let nativeAudio = null;
+let nativeFilesystem = null;
+let nativeAudioActive = false;
+let nativeAudioId = "vyra-main";
+let nativeProgressTimer = null;
+
+function getNativeAudio(){
+  const cap = window.Capacitor;
+  if (!cap?.isNativePlatform?.()) return null;
+  try{
+    if(!nativeAudio && cap.isPluginAvailable?.("AudioPlayer")){
+      nativeAudio = cap.registerPlugin("AudioPlayer");
+    }
+  }catch{}
+  return nativeAudio;
+}
+
+function getNativeFilesystem(){
+  const cap = window.Capacitor;
+  if (!cap?.isNativePlatform?.()) return null;
+  try{
+    if(!nativeFilesystem && cap.isPluginAvailable?.("Filesystem")){
+      nativeFilesystem = cap.registerPlugin("Filesystem");
+    }
+  }catch{}
+  return nativeFilesystem;
+}
+
+function blobToBase64(blob){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const value=String(reader.result||"");
+      resolve(value.includes(",") ? value.split(",")[1] : value);
+    };
+    reader.onerror=()=>reject(reader.error||new Error("Dosya okunamadı."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function stopNativeAudio(){
+  const audio=getNativeAudio();
+  if(!audio || !nativeAudioActive) return;
+  clearInterval(nativeProgressTimer);
+  nativeProgressTimer=null;
+  try{await audio.stop({audioId:nativeAudioId});}catch{}
+  try{await audio.destroy({audioId:nativeAudioId});}catch{}
+  nativeAudioActive=false;
+}
+
+async function playNativeLocalMedia(item){
+  const audio=getNativeAudio();
+  const fs=getNativeFilesystem();
+  if(!audio || !fs) return false;
+  try{
+    const ext=(item.mime?.split("/")?.[1]||"mp3").replace(/[^a-z0-9]/gi,"")||"mp3";
+    const path="VYRA/"+item.id+"."+ext;
+    const base64=await blobToBase64(item.blob);
+    await fs.writeFile({path,data:base64,directory:"DATA",recursive:true});
+    const uriResult=await fs.getUri({path,directory:"DATA"});
+    try{await audio.stop({audioId:nativeAudioId});}catch{}
+    try{await audio.destroy({audioId:nativeAudioId});}catch{}
+    await audio.create({
+      audioId:nativeAudioId,
+      audioSource:uriResult.uri,
+      friendlyTitle:item.title,
+      artistName:item.artist||"VYRA Music",
+      albumTitle:"VYRA Offline",
+      artworkSource:item.thumbnail||"",
+      useForNotification:true,
+      showSeekBackward:true,
+      showSeekForward:true,
+      seekBackwardTime:10,
+      seekForwardTime:10
+    });
+    await audio.initialize({audioId:nativeAudioId});
+    await audio.play({audioId:nativeAudioId});
+    nativeAudioActive=true;
+    clearInterval(nativeProgressTimer);
+    nativeProgressTimer=setInterval(async()=>{
+      if(!nativeAudioActive)return;
+      try{
+        const [time,duration]=await Promise.all([
+          audio.getCurrentTime({audioId:nativeAudioId}),
+          audio.getDuration({audioId:nativeAudioId})
+        ]);
+        const t=Number(time?.currentTime||0), d=Number(duration?.duration||0);
+        const progress=$("#progress"), screenProgress=$("#screenProgress");
+        [progress,screenProgress].forEach(el=>{
+          if(!el)return;
+          el.max=d||100;
+          el.value=Math.min(t,d||100);
+          el.style.setProperty("--progress",d?(t/d*100)+"%":"0%");
+        });
+        if($("#currentTime"))$("#currentTime").textContent=formatTime(t);
+        if($("#screenCurrent"))$("#screenCurrent").textContent=formatTime(t);
+        if($("#duration"))$("#duration").textContent=formatTime(d);
+        if($("#screenDuration"))$("#screenDuration").textContent=formatTime(d);
+      }catch{}
+    },500);
+    return true;
+  }catch(error){
+    console.warn("VYRA native audio:",error);
+    nativeAudioActive=false;
+    return false;
+  }
+}
+
 let localMedia=null;
 let localObjectUrl=null;
 
@@ -1446,6 +1590,15 @@ async function playLocalMediaById(id){
   if($("#nowTitle"))$("#nowTitle").textContent=current.title;if($("#nowArtist"))$("#nowArtist").textContent=current.artist;
   if($("#nowArt")){$("#nowArt").style.backgroundImage="";$("#nowArt").textContent="♫";}
   updateLikeButtons(current);openTrackScreen(current);syncPlaybackButtons();
+  const nativeStarted=await playNativeLocalMedia(item);
+  if(nativeStarted){
+    if(localMedia===item)localMedia=null;
+    playing=true;
+    syncPlaybackButtons();
+    updateMediaSession();
+    toast("▶ Native arka plan oynatımı aktif");
+    return;
+  }
   try{await media.play();toast("▶ Arka plan destekli cihaz müziği oynatılıyor");}catch{playing=false;syncPlaybackButtons();toast("Oynatmak için tekrar dokun.");}
 }
 function setupLocalOffline(){
