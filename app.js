@@ -505,8 +505,58 @@ function stopProgress() {
   progressTimer = null;
 }
 
-function updateMediaSession(){if(!("mediaSession" in navigator)||!current)return;try{navigator.mediaSession.metadata=new MediaMetadata({title:current.title||"VYRA",artist:current.artist||"YouTube",album:"VYRA Music",artwork:current.thumbnail?[{src:current.thumbnail,sizes:"480x360",type:"image/jpeg"}]:[]});navigator.mediaSession.playbackState=playing?"playing":"paused";}catch{}}
-function setupMediaSession(){if(!("mediaSession" in navigator))return;const actions={play:()=>togglePlayback(),pause:()=>togglePlayback(),nexttrack:()=>nextTrack(),previoustrack:()=>previousTrack(),seekbackward:()=>{try{player?.seekTo(Math.max(0,(player.getCurrentTime()||0)-10),true)}catch{}},seekforward:()=>{try{player?.seekTo((player.getCurrentTime()||0)+10,true)}catch{}}};Object.entries(actions).forEach(([name,handler])=>{try{navigator.mediaSession.setActionHandler(name,handler)}catch{}});}
+function updateMediaSession(){
+  if (!("mediaSession" in navigator) || !current) return;
+  try {
+    if ("MediaMetadata" in window) navigator.mediaSession.metadata = new MediaMetadata({
+      title: current.title || "VYRA",
+      artist: current.artist || "VYRA Music",
+      album: "VYRA Music",
+      artwork: current.thumbnail ? [{ src: current.thumbnail, sizes: "480x360", type: "image/jpeg" }] : []
+    });
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  } catch {}
+}
+function mediaPlay(){
+  if (localMedia && window.__vyraLocalPlayer) {
+    window.__vyraLocalPlayer.play().then(()=>{playing=true;syncPlaybackButtons();}).catch(()=>toast("Oynatmak için VYRA'ya geri dönüp tekrar dokun."));
+    return;
+  }
+  if (!current) { if(queue.length) playTrack(queue[0],0); return; }
+  try { player?.playVideo(); } catch {}
+}
+function mediaPause(){
+  if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.pause(); playing=false; syncPlaybackButtons(); return; }
+  try { player?.pauseVideo(); } catch {}
+}
+function setupMediaSession(){
+  if (!("mediaSession" in navigator)) return;
+  const actions = {
+    play: mediaPlay,
+    pause: mediaPause,
+    nexttrack: nextTrack,
+    previoustrack: previousTrack,
+    seekbackward: () => {
+      try {
+        if (localMedia && window.__vyraLocalPlayer) window.__vyraLocalPlayer.currentTime = Math.max(0, window.__vyraLocalPlayer.currentTime - 10);
+        else player?.seekTo(Math.max(0,(player?.getCurrentTime()||0)-10), true);
+      } catch {}
+    },
+    seekforward: () => {
+      try {
+        if (localMedia && window.__vyraLocalPlayer) window.__vyraLocalPlayer.currentTime += 10;
+        else player?.seekTo((player?.getCurrentTime()||0)+10, true);
+      } catch {}
+    }
+  };
+  Object.entries(actions).forEach(([name,handler])=>{try{navigator.mediaSession.setActionHandler(name,handler)}catch{}});
+}
+function syncPlaybackButtons(){
+  const label = playing ? "Ⅱ" : "▶";
+  ["#playBtn","#trackScreenPlay","#screenPlaySmall"].forEach(selector=>{const node=$(selector);if(node)node.textContent=label;});
+  $(".player")?.classList.toggle("is-playing",playing);
+  updateMediaSession();
+}
 
 function handlePlayerState(event) {
   if (!window.YT) return;
@@ -875,6 +925,12 @@ function playTrack(track, index = -1) {
 }
 
 function togglePlayback() {
+  if (localMedia && window.__vyraLocalPlayer) {
+    const media = window.__vyraLocalPlayer;
+    if (media.paused) media.play().then(()=>{playing=true;syncPlaybackButtons();}).catch(()=>toast("Oynatmak için tekrar dokun."));
+    else { media.pause(); playing=false; syncPlaybackButtons(); }
+    return;
+  }
   if (!current) {
     if (queue.length) {
       playTrack(queue[0], 0);
@@ -902,12 +958,14 @@ function togglePlayback() {
 }
 
 function nextTrack() {
+  if (localMedia) { toast("Cihazındaki dosya için Offline listesinden başka bir parça seç."); return; }
   if (!queue.length) return;
   queueIndex = (queueIndex + 1) % queue.length;
   playTrack(queue[queueIndex], queueIndex);
 }
 
 function previousTrack() {
+  if (localMedia && window.__vyraLocalPlayer) { window.__vyraLocalPlayer.currentTime=0; return; }
   if (!queue.length) return;
 
   try {
@@ -1054,9 +1112,9 @@ function bindEvents() {
   });
 
   $("#volume")?.addEventListener("input", event => {
-    if (playerReady && player) {
-      try { player.setVolume(Number(event.target.value)); } catch {}
-    }
+    const value = Number(event.target.value);
+    if (playerReady && player) { try { player.setVolume(value); } catch {} }
+    if (window.__vyraLocalPlayer) window.__vyraLocalPlayer.volume = value / 100;
   });
 
   $("#newPlaylist")?.addEventListener("click", openCreatePlaylist);
@@ -1370,7 +1428,9 @@ async function playLocalMediaById(id){
   if(!window.__vyraLocalPlayer){
     const media=document.createElement("video");
     media.id="vyraLocalPlayer";media.style.display="none";media.playsInline=true;
-    media.addEventListener("ended",()=>{playing=false;$(".player")?.classList.remove("is-playing");});
+    media.addEventListener("play",()=>{playing=true;syncPlaybackButtons();startProgress();});
+    media.addEventListener("pause",()=>{playing=false;syncPlaybackButtons();stopProgress();});
+    media.addEventListener("ended",()=>{playing=false;syncPlaybackButtons();stopProgress();});
     media.addEventListener("timeupdate",()=>{
       const d=media.duration||0, t=media.currentTime||0;
       ["#progress","#screenProgress"].forEach(s=>{const el=$(s);if(el){el.max=d||100;el.value=t;}});
@@ -1382,11 +1442,11 @@ async function playLocalMediaById(id){
     document.body.appendChild(media);window.__vyraLocalPlayer=media;
   }
   const media=window.__vyraLocalPlayer;media.src=localObjectUrl;media.volume=Number($("#volume")?.value||70)/100;
-  current=localTrack(item);screenTrack=current;playing=true;
+  current=localTrack(item);screenTrack=current;playing=true;queue=[current];queueIndex=0;
   if($("#nowTitle"))$("#nowTitle").textContent=current.title;if($("#nowArtist"))$("#nowArtist").textContent=current.artist;
   if($("#nowArt")){$("#nowArt").style.backgroundImage="";$("#nowArt").textContent="♫";}
-  updateLikeButtons(current);openTrackScreen(current);$(".player")?.classList.add("is-playing");
-  try{await media.play();toast("▶ Offline oynatılıyor");}catch{toast("Oynatmak için tekrar dokun.");}
+  updateLikeButtons(current);openTrackScreen(current);syncPlaybackButtons();
+  try{await media.play();toast("▶ Arka plan destekli cihaz müziği oynatılıyor");}catch{playing=false;syncPlaybackButtons();toast("Oynatmak için tekrar dokun.");}
 }
 function setupLocalOffline(){
   $("#offlineFileInput")?.addEventListener("change",e=>{
