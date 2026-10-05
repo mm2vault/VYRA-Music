@@ -505,6 +505,9 @@ function stopProgress() {
   progressTimer = null;
 }
 
+function updateMediaSession(){if(!("mediaSession" in navigator)||!current)return;try{navigator.mediaSession.metadata=new MediaMetadata({title:current.title||"VYRA",artist:current.artist||"YouTube",album:"VYRA Music",artwork:current.thumbnail?[{src:current.thumbnail,sizes:"480x360",type:"image/jpeg"}]:[]});navigator.mediaSession.playbackState=playing?"playing":"paused";}catch{}}
+function setupMediaSession(){if(!("mediaSession" in navigator))return;const actions={play:()=>togglePlayback(),pause:()=>togglePlayback(),nexttrack:()=>nextTrack(),previoustrack:()=>previousTrack(),seekbackward:()=>{try{player?.seekTo(Math.max(0,(player.getCurrentTime()||0)-10),true)}catch{}},seekforward:()=>{try{player?.seekTo((player.getCurrentTime()||0)+10,true)}catch{}}};Object.entries(actions).forEach(([name,handler])=>{try{navigator.mediaSession.setActionHandler(name,handler)}catch{}});}
+
 function handlePlayerState(event) {
   if (!window.YT) return;
 
@@ -514,6 +517,7 @@ function handlePlayerState(event) {
     $("#playBtn") && ($("#playBtn").textContent = "Ⅱ");
     $("#trackScreenPlay") && ($("#trackScreenPlay").textContent = "Ⅱ");
     $(".player")?.classList.add("is-playing");
+    updateMediaSession();
     startProgress();
     return;
   }
@@ -524,6 +528,7 @@ function handlePlayerState(event) {
       $("#playBtn") && ($("#playBtn").textContent = "▶");
       $("#trackScreenPlay") && ($("#trackScreenPlay").textContent = "▶");
       $(".player")?.classList.remove("is-playing");
+      updateMediaSession();
       stopProgress();
     }
     return;
@@ -533,6 +538,7 @@ function handlePlayerState(event) {
     playing = false;
     $("#playBtn") && ($("#playBtn").textContent = "▶");
     $(".player")?.classList.remove("is-playing");
+    updateMediaSession();
     stopProgress();
     nextTrack();
   }
@@ -849,6 +855,7 @@ function playTrack(track, index = -1) {
   document.title = t.title + " — VYRA";
   addHistory(t);
   updateLikeButtons(t);
+  updateMediaSession();
   openTrackScreen(t);
 
   if (!playerReady || !player) {
@@ -1393,6 +1400,7 @@ function setupLocalOffline(){
 
 function boot() {
   setupPWA();
+  setupMediaSession();
   setupOfflineMode();
   setupLocalOffline();
   if (window.lucide) window.lucide.createIcons();
